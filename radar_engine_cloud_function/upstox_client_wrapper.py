@@ -46,7 +46,7 @@ def get_websocket_auth_uri():
         return None
 
 
-def fetch_historical_data(instrument_key, interval=1, unit='days', num_periods=100):
+def fetch_historical_data(instrument_key, interval=1, unit='days', num_periods=250):
     """Fetches historical candle data for a given instrument."""
     print(f"Fetching {interval} {unit} historical data for {instrument_key}...")
     today = pd.Timestamp.now(tz='Asia/Kolkata').date()
@@ -70,73 +70,43 @@ def fetch_historical_data(instrument_key, interval=1, unit='days', num_periods=1
             df = pd.DataFrame(candles_data)
             df.set_index('datetime', inplace=True)
             df.sort_index(inplace=True)
-            print(f"Successfully fetched {len(df)} historical candles for {instrument_key}.")
+            # print(f"Successfully fetched {len(df)} historical candles for {instrument_key}.")
             return df
         else:
-            print(f"No historical data found for {instrument_key}.")
+            # print(f"No historical data found for {instrument_key}.")
             return pd.DataFrame()
     except Exception as e:
-        print(f"ERROR fetching historical data for {instrument_key}: {e}")
-        if hasattr(e, 'body'):
-            print(f"HTTP response body: {e.body}")
+        # print(f"ERROR fetching historical data for {instrument_key}: {e}")
         return pd.DataFrame()
 
 
-def get_nifty_instrument_keys(indices=['NIFTY 50', 'NIFTY NEXT 50']):
+def get_equity_instrument_keys():
     """
-    Downloads the master list of all tradable instruments and filters it
-    to include only the constituents of the specified NIFTY indices.
-    Args:
-        indices (list): A list of NIFTY indices to get constituents for.
+    Downloads the master list of all tradable equity instruments from Upstox.
+    This function no longer relies on external NSE sources.
     Returns:
-        list: A list of instrument keys for the stocks in the specified indices.
+        list: A list of instrument keys for all tradable equity stocks.
     """
-    # URLs for official NSE index constituent lists
-    index_urls = {
-        'NIFTY 50': 'https://archives.nseindia.com/content/indices/ind_nifty50list.csv',
-        'NIFTY NEXT 50': 'https://archives.nseindia.com/content/indices/ind_niftynext50list.csv'
-    }
-
-    # **FIX:** Use the MTF instruments list as the master list, as we have confirmed it works.
+    # We will use the MTF list as it contains a broad range of liquid stocks.
     upstox_master_url = "https://assets.upstox.com/market-quote/instruments/exchange/MTF.json.gz"
-    print(f"Downloading full Upstox instrument master from {upstox_master_url}...")
+    print(f"Downloading instrument master list from Upstox: {upstox_master_url}...")
     try:
         headers = {"Authorization": f"Bearer {UPSTOX_ACCESS_TOKEN}"}
         response = requests.get(upstox_master_url, headers=headers)
         response.raise_for_status()
+        
         gzip_file = io.BytesIO(response.content)
         with gzip.open(gzip_file, 'rt') as f:
             instrument_list = json.load(f)
+        
         upstox_df = pd.DataFrame(instrument_list)
+        
+        # Filter for standard equity instruments
+        equity_df = upstox_df[upstox_df['instrument_type'] == 'EQUITY']
+
+        print(f"Found {len(equity_df)} tradable equity stocks in the Upstox master list.")
+        return equity_df['instrument_key'].tolist()
+
     except Exception as e:
         print(f"ERROR: Could not download or parse the Upstox master instrument list: {e}")
         return []
-
-    # Now, fetch the symbols from the requested NIFTY indices
-    nifty_symbols = set()
-    for index_name in indices:
-        if index_name in index_urls:
-            url = index_urls[index_name]
-            print(f"Fetching {index_name} constituents from {url}...")
-            try:
-                # NSE website requires a browser-like User-Agent header
-                nse_headers = {'User-Agent': 'Mozilla/5.0'}
-                response = requests.get(url, headers=nse_headers)
-                response.raise_for_status()
-                index_df = pd.read_csv(io.StringIO(response.text))
-                # Add all symbols from the 'Symbol' column to our set
-                nifty_symbols.update(index_df['Symbol'].tolist())
-            except Exception as e:
-                print(f"Warning: Could not fetch constituents for {index_name}: {e}")
-
-    if not nifty_symbols:
-        print("ERROR: Failed to fetch any NIFTY index constituents.")
-        return []
-
-    print(f"Total unique symbols from specified NIFTY indices: {len(nifty_symbols)}")
-
-    # Filter the Upstox master list to find instruments matching the NIFTY symbols
-    filtered_df = upstox_df[upstox_df['trading_symbol'].isin(nifty_symbols)]
-    
-    print(f"Found {len(filtered_df)} matching instruments in Upstox master for the specified NIFTY indices.")
-    return filtered_df['instrument_key'].tolist()

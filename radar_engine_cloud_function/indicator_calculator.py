@@ -5,70 +5,61 @@ import pandas_ta as ta
 
 def calculate_indicators(df):
     """
-    Calculates technical indicators from a DataFrame of candle data.
-    This now includes RSI, EMAs, Volume Spike, MACD, and EMA Crossover signals.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing OHLCV data.
-
-    Returns:
-        dict: A dictionary containing the calculated indicator values and signals.
+    Calculates a comprehensive set of technical indicators from a DataFrame.
     """
-    if df.empty or len(df) < 2: # Need at least 2 data points for comparisons
+    if df.empty or len(df) < 2:
         return {}
 
     indicators = {}
-    
-    # Use a copy to avoid SettingWithCopyWarning
     df_with_indicators = df.copy()
 
-    # --- Standard Indicators ---
+    # --- Calculate All Indicators ---
     df_with_indicators.ta.rsi(length=14, append=True)
+    df_with_indicators.ta.ema(length=20, append=True) # Add 20-day EMA for pullback strategy
     df_with_indicators.ta.ema(length=50, append=True)
     df_with_indicators.ta.ema(length=200, append=True)
     df_with_indicators.ta.macd(append=True)
+    df_with_indicators.ta.bbands(append=True) # Add Bollinger Bands
     df_with_indicators.ta.ema(length=10, name="VOL_EMA_10", close='volume', append=True)
 
     # Extract latest and previous day's data
     latest = df_with_indicators.iloc[-1]
     previous = df_with_indicators.iloc[-2]
 
-    # --- Extract Indicator Values ---
+    # --- Extract Raw Indicator Values ---
     indicators['RSI'] = latest.get('RSI_14')
+    indicators['EMA20'] = latest.get('EMA_20')
     indicators['EMA50'] = latest.get('EMA_50')
     indicators['EMA200'] = latest.get('EMA_200')
     indicators['MACD'] = latest.get('MACD_12_26_9')
     indicators['MACD_Signal'] = latest.get('MACDs_12_26_9')
+    indicators['BB_Lower'] = latest.get('BBL_20_2.0') # Lower Bollinger Band
+    indicators['BB_Upper'] = latest.get('BBU_20_2.0') # Upper Bollinger Band
+    indicators['BB_Width'] = latest.get('BBB_20_2.0') # Bollinger Band Width
     indicators['Volume'] = latest.get('volume')
     indicators['Close'] = latest.get('close')
+    indicators['Low'] = latest.get('low') # For pullback check
 
-    # --- Signal 1: Volume Spike ---
+    # --- Generate Discrete Signals ---
+
+    # Volume Spike Signal
     avg_volume = latest.get('VOL_EMA_10')
-    if avg_volume and indicators['Volume'] and indicators['Volume'] > (avg_volume * 1.5):
-        indicators['Volume_Spike'] = True
-    else:
-        indicators['Volume_Spike'] = False
+    indicators['Volume_Spike'] = bool(avg_volume and indicators['Volume'] and indicators['Volume'] > (avg_volume * 1.5))
 
-    # --- Signal 2: EMA Crossover ---
-    prev_ema50 = previous.get('EMA_50')
-    prev_ema200 = previous.get('EMA_200')
-    
+    # EMA Crossover Signal
     indicators['Crossover'] = 'None'
-    if prev_ema50 is not None and prev_ema200 is not None and indicators['EMA50'] is not None and indicators['EMA200'] is not None:
-        if prev_ema50 <= prev_ema200 and indicators['EMA50'] > indicators['EMA200']:
+    if all(k in indicators and indicators[k] is not None for k in ['EMA50', 'EMA200']) and all(k in previous and previous[k] is not None for k in ['EMA_50', 'EMA_200']):
+        if previous['EMA_50'] <= previous['EMA_200'] and indicators['EMA50'] > indicators['EMA200']:
             indicators['Crossover'] = 'Golden'
-        elif prev_ema50 >= prev_ema200 and indicators['EMA50'] < indicators['EMA200']:
+        elif previous['EMA_50'] >= previous['EMA_200'] and indicators['EMA50'] < indicators['EMA200']:
             indicators['Crossover'] = 'Death'
 
-    # --- Signal 3: MACD Crossover ---
-    prev_macd = previous.get('MACD_12_26_9')
-    prev_macd_signal = previous.get('MACDs_12_26_9')
-
+    # MACD Crossover Signal
     indicators['MACD_Crossover'] = 'None'
-    if prev_macd is not None and prev_macd_signal is not None and indicators['MACD'] is not None and indicators['MACD_Signal'] is not None:
-        if prev_macd <= prev_macd_signal and indicators['MACD'] > indicators['MACD_Signal']:
+    if all(k in indicators and indicators[k] is not None for k in ['MACD', 'MACD_Signal']) and all(k in previous and previous[k] is not None for k in ['MACD_12_26_9', 'MACDs_12_26_9']):
+        if previous['MACD_12_26_9'] <= previous['MACDs_12_26_9'] and indicators['MACD'] > indicators['MACD_Signal']:
             indicators['MACD_Crossover'] = 'Bullish'
-        elif prev_macd >= prev_macd_signal and indicators['MACD'] < indicators['MACD_Signal']:
+        elif previous['MACD_12_26_9'] >= previous['MACDs_12_26_9'] and indicators['MACD'] < indicators['MACD_Signal']:
             indicators['MACD_Crossover'] = 'Bearish'
 
     return indicators

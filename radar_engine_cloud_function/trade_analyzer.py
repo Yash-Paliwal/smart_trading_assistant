@@ -11,10 +11,10 @@ DB_USER = config('DB_USER')
 DB_PASSWORD = config('DB_PASSWORD')
 DB_PORT = config('DB_PORT')
 
-def analyze_setup(indicators, df_history, rules):
+def analyze_setup(indicators, df_history, rules, stock_sector=None, strong_sectors=None, volatility='NORMAL'):
     """
-    A generic "Rules Engine" that analyzes indicators and patterns
-    based on a provided list of rules.
+    A generic "Rules Engine" that analyzes indicators and patterns,
+    now including contextual filters for sector strength and market volatility.
     """
     if not indicators:
         return 0, []
@@ -22,11 +22,17 @@ def analyze_setup(indicators, df_history, rules):
     score = 0
     reasons = []
 
-    # Loop through each rule and evaluate it
+    # --- Contextual Scoring ---
+    # 1. Sector Strength Bonus: Give a point if the stock is in a top-performing sector.
+    if stock_sector and strong_sectors and stock_sector in strong_sectors:
+        score += 1
+        reasons.append(f"Relative Strength: Stock is in a top-performing sector ({stock_sector}).")
+
+    # --- Rule-Based Scoring ---
+    # Loop through the base rules and evaluate them
     for rule in rules:
         rule_triggered = False
         
-        # --- Process Indicator-based Rules ---
         if rule['type'] == 'indicator':
             indicator_value = indicators.get(rule['indicator'])
             if indicator_value is not None:
@@ -37,16 +43,29 @@ def analyze_setup(indicators, df_history, rules):
                 elif rule['condition'] == 'equals' and indicator_value == rule['value']:
                     rule_triggered = True
         
-        # --- Process Pattern-based Rules ---
         elif rule['type'] == 'pattern':
-            # The rule dictionary contains the actual function to call from the pattern_recognizer module
+            # The pattern_recognizer module must be imported where this function is called
             if rule['function'](df_history):
                 rule_triggered = True
         
-        # If the rule was triggered, update the score and reasons
+        elif rule['type'] == 'custom':
+            if rule['function'](indicators):
+                rule_triggered = True
+        
         if rule_triggered:
-            score += rule.get('score', 1) # Use the score from the rule, default to 1
-            # Use .format(**indicators) to fill in values like {RSI} into the message
+            rule_score = rule.get('score', 1)
+            
+            # 2. Volatility-Adjusted Scoring
+            # If volatility is HIGH, give a bonus to mean-reversion signals like RSI
+            if volatility == 'HIGH' and rule['name'] in ['RSI Oversold', 'RSI Overbought']:
+                rule_score += 1
+                reasons.append("Volatility Bonus: Signal confirmed in high-volatility market.")
+            # If volatility is LOW, give a bonus to trend-following signals like crossovers
+            elif volatility == 'LOW' and rule['name'] in ['Golden Cross Event', 'Death Cross Event', 'Bullish MACD Cross']:
+                rule_score += 1
+                reasons.append("Volatility Bonus: Signal confirmed in low-volatility market.")
+
+            score += rule_score
             reasons.append(rule['message'].format(**indicators))
 
     return score, reasons
