@@ -1,0 +1,1213 @@
+{
+  "data_fetch_results": {
+    "requested_symbols": 3,
+    "successful_fetches": 3,
+    "failed_fetches": 0,
+    "symbols_with_data": [
+      "NSE_EQ|INE002A01018",
+      "NSE_EQ|INE019A01038",
+      "NSE_EQ|INE090A01021"
+    ],
+    "failed_symbols": []
+  },
+  "alert_scenarios": {
+    "RSI_OVERSOLD": {
+      "expected_alert": "RSI oversold condition",
+      "alerts_found": 10,
+      "expected_found": false,
+      "alert_details": [
+        {
+          "date": "2025-07-31 15:36:38.068030",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 493.2736277196011,
+            "EMA50": 744.3042479000999,
+            "EMA200": null,
+            "MACD": -85.50483217366326,
+            "MACD_Signal": -92.95221923672734,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 397.66,
+            "Low": 393.68,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-01 15:36:38.068037",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 483.4104250796391,
+            "EMA50": 730.3985911197038,
+            "EMA200": null,
+            "MACD": -83.816363804373,
+            "MACD_Signal": -91.12504815025648,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 389.71,
+            "Low": 385.81,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-04 15:36:38.068048",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 473.74371792919726,
+            "EMA50": 716.7323718601076,
+            "EMA200": null,
+            "MACD": -82.1605397110045,
+            "MACD_Signal": -89.33214646240609,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 381.91,
+            "Low": 378.09,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-05 15:36:38.068055",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 464.2709828883213,
+            "EMA50": 703.3028670812798,
+            "EMA200": null,
+            "MACD": -80.53560015396653,
+            "MACD_Signal": -87.57283720071818,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 374.28,
+            "Low": 370.53,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-06 15:36:38.068061",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 454.98707975610023,
+            "EMA50": 690.1062840584846,
+            "EMA200": null,
+            "MACD": -78.94220762176906,
+            "MACD_Signal": -85.84671128492836,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 366.79,
+            "Low": 363.12,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-07 15:36:38.068067",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 445.88831025551923,
+            "EMA50": 677.1393709581519,
+            "EMA200": null,
+            "MACD": -77.37972392706428,
+            "MACD_Signal": -84.15331381335555,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 359.45,
+            "Low": 355.86,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-08 15:36:38.068073",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 436.97132832642217,
+            "EMA50": 664.3990034695969,
+            "EMA200": null,
+            "MACD": -75.8472968280555,
+            "MACD_Signal": -82.49211041629555,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 352.26,
+            "Low": 348.74,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-11 15:36:38.068084",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 428.2331065810486,
+            "EMA50": 651.8821798041225,
+            "EMA200": null,
+            "MACD": -74.34391608862632,
+            "MACD_Signal": -80.86247155076171,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 345.22,
+            "Low": 341.77,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-12 15:36:38.068090",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 419.6699535733297,
+            "EMA50": 639.5856237333727,
+            "EMA200": null,
+            "MACD": -72.86925692139687,
+            "MACD_Signal": -79.26382862488875,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 338.32,
+            "Low": 334.93,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-08-13 15:36:38.068096",
+          "details": [
+            "RSI (0.00) indicates oversold.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 0.0,
+            "EMA20": 411.2775770425364,
+            "EMA50": 627.5057953516718,
+            "EMA200": null,
+            "MACD": -71.42353527275395,
+            "MACD_Signal": -77.6957699544618,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 331.55,
+            "Low": 328.23,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        }
+      ]
+    },
+    "GOLDEN_CROSS": {
+      "expected_alert": "Golden cross (EMA50 > EMA200)",
+      "alerts_found": 10,
+      "expected_found": false,
+      "alert_details": [
+        {
+          "date": "2025-09-29 15:36:38.138311",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6050.87) is above EMA200 (4594.61) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6480.969321305328,
+            "EMA50": 6050.873237588083,
+            "EMA200": 4594.609462795166,
+            "MACD": 216.6038903102908,
+            "MACD_Signal": 212.37600421370936,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6787.28,
+            "Low": 6651.54,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-09-30 15:36:38.138313",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6081.08) is above EMA200 (4616.76) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6513.374147847678,
+            "EMA50": 6081.082914545413,
+            "EMA200": 4616.764791523573,
+            "MACD": 217.68712976579718,
+            "MACD_Signal": 213.43822932412695,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6821.22,
+            "Low": 6684.8,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-01 15:36:38.138315",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6111.45) is above EMA200 (4639.04) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6545.9413718621845,
+            "EMA50": 6111.445545347554,
+            "EMA200": 4639.039072204931,
+            "MACD": 218.7760822763421,
+            "MACD_Signal": 214.50579991457,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6855.33,
+            "Low": 6718.22,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-02 15:36:38.138317",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6141.96) is above EMA200 (4661.43) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6578.670765018167,
+            "EMA50": 6141.961406314316,
+            "EMA200": 4661.432713277519,
+            "MACD": 219.86986464470192,
+            "MACD_Signal": 215.5786128605964,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6889.6,
+            "Low": 6751.81,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-03 15:36:38.138320",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6172.63) is above EMA200 (4683.95) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6611.5640254926275,
+            "EMA50": 6172.631547243167,
+            "EMA200": 4683.946318120529,
+            "MACD": 220.9693253077221,
+            "MACD_Signal": 216.65675535002154,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6924.05,
+            "Low": 6785.57,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-06 15:36:38.138323",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6203.46) is above EMA200 (4706.58) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6644.621737350472,
+            "EMA50": 6203.4565846061805,
+            "EMA200": 4706.580384606892,
+            "MACD": 222.07426656441658,
+            "MACD_Signal": 217.74025759290055,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6958.67,
+            "Low": 6819.5,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-07 15:36:38.138325",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6234.44) is above EMA200 (4729.34) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6677.845381412332,
+            "EMA50": 6234.437502856918,
+            "EMA200": 4729.3355051580675,
+            "MACD": 223.1852687847395,
+            "MACD_Signal": 218.82925983126836,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 6993.47,
+            "Low": 6853.6,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-08 15:36:38.138329",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6265.57) is above EMA200 (4752.21) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6711.234392706396,
+            "EMA50": 6265.574463529197,
+            "EMA200": 4752.212067295798,
+            "MACD": 224.3011221620891,
+            "MACD_Signal": 219.92363229743253,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 7028.43,
+            "Low": 6887.86,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-09 15:36:38.138331",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6296.87) is above EMA200 (4775.21) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6744.7901648295965,
+            "EMA50": 6296.868406135895,
+            "EMA200": 4775.210653690865,
+            "MACD": 225.422419000045,
+            "MACD_Signal": 221.02338963795503,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 7063.57,
+            "Low": 6922.3,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        },
+        {
+          "date": "2025-10-10 15:36:38.138333",
+          "details": [
+            "RSI (100.00) indicates overbought.",
+            "EMA50 (6328.32) is above EMA200 (4798.33) - potentially bullish trend.",
+            "Current Volume: 1,000,000."
+          ],
+          "indicators": {
+            "RSI": 100.0,
+            "EMA20": 6778.51395865535,
+            "EMA50": 6328.320233346252,
+            "EMA200": 4798.331841216329,
+            "MACD": 226.54956132038114,
+            "MACD_Signal": 222.12862397444027,
+            "BB_Lower": null,
+            "BB_Upper": null,
+            "BB_Width": null,
+            "Volume": 1000000.0,
+            "Close": 7098.89,
+            "Low": 6956.91,
+            "Volume_Spike": false,
+            "Crossover": "None"
+          }
+        }
+      ]
+    },
+    "VOLUME_SPIKE": {
+      "expected_alert": "Volume spike detected",
+      "alerts_found": 0,
+      "expected_found": false,
+      "alert_details": []
+    }
+  },
+  "strategy_performance": {
+    "BULL_MARKET": {
+      "RELIANCE": {
+        "symbol": "RELIANCE",
+        "scenario": "BULL_MARKET",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": -0.1357992600795468,
+          "annualized_return": -0.8120901949989374,
+          "volatility": 0.4342744946315366,
+          "sharpe_ratio": -3.618617387582019,
+          "max_drawdown": -0.16296835212804653,
+          "win_rate": 0.3181818181818182,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      },
+      "TCS": {
+        "symbol": "TCS",
+        "scenario": "BULL_MARKET",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": -0.0767591417012985,
+          "annualized_return": -0.5994107644382571,
+          "volatility": 0.3377057791142596,
+          "sharpe_ratio": -2.534020066867443,
+          "max_drawdown": -0.09854885840225834,
+          "win_rate": 0.4090909090909091,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      },
+      "HDFCBANK": {
+        "symbol": "HDFCBANK",
+        "scenario": "BULL_MARKET",
+        "total_days": 72,
+        "alerts_generated": 1,
+        "performance_metrics": {
+          "total_return": 0.016662851359655617,
+          "annualized_return": 0.2083945425753626,
+          "volatility": 0.33506409979102053,
+          "sharpe_ratio": 0.7334427550018034,
+          "max_drawdown": -0.06770522594188466,
+          "win_rate": 0.5454545454545454,
+          "alert_frequency": 0.045454545454545456
+        },
+        "alerts": [
+          {
+            "date": "2025-06-18 15:36:38.394230",
+            "symbol": "HDFCBANK",
+            "indicators": {
+              "RSI": 71.99024371291036,
+              "EMA20": 1614.637901736168,
+              "EMA50": 1584.6337243464422,
+              "EMA200": null,
+              "MACD": 53.47611160916108,
+              "MACD_Signal": 35.126161730303906,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1690320.0,
+              "Close": 1779.87,
+              "Low": 1728.1,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (71.99) indicates overbought.",
+              "Current Volume: 1,690,320."
+            ],
+            "price": 1779.87
+          }
+        ]
+      }
+    },
+    "BEAR_MARKET": {
+      "RELIANCE": {
+        "symbol": "RELIANCE",
+        "scenario": "BEAR_MARKET",
+        "total_days": 72,
+        "alerts_generated": 15,
+        "performance_metrics": {
+          "total_return": 0.40801191905985346,
+          "annualized_return": 49.37533828153545,
+          "volatility": 0.6809240150281447,
+          "sharpe_ratio": 6.134076257650552,
+          "max_drawdown": -0.1312549935817091,
+          "win_rate": 0.6363636363636364,
+          "alert_frequency": 0.6818181818181818
+        },
+        "alerts": [
+          {
+            "date": "2025-06-09 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 70.70076938052479,
+              "EMA20": 3373.971502274373,
+              "EMA50": 3106.1303486230795,
+              "EMA200": null,
+              "MACD": 193.40947745308995,
+              "MACD_Signal": 136.17015948639641,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1452131.0,
+              "Close": 3949.23,
+              "Low": 3849.02,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (70.70) indicates overbought.",
+              "Current Volume: 1,452,131."
+            ],
+            "price": 3949.23
+          },
+          {
+            "date": "2025-06-10 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 73.73660742814322,
+              "EMA20": 3446.0389782482425,
+              "EMA50": 3146.3087663241354,
+              "EMA200": null,
+              "MACD": 229.55342332478904,
+              "MACD_Signal": 154.84681225407496,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1723476.0,
+              "Close": 4130.68,
+              "Low": 3951.72,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (73.74) indicates overbought.",
+              "Current Volume: 1,723,476."
+            ],
+            "price": 4130.68
+          },
+          {
+            "date": "2025-06-12 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 71.50226483841287,
+              "EMA20": 3564.661521876679,
+              "EMA50": 3219.395466337658,
+              "EMA200": null,
+              "MACD": 269.3034660823482,
+              "MACD_Signal": 192.0065290743114,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 2027835.0,
+              "Close": 4199.52,
+              "Low": 3985.61,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (71.50) indicates overbought.",
+              "Current Volume: 2,027,835."
+            ],
+            "price": 4199.52
+          },
+          {
+            "date": "2025-06-13 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 76.23262045993026,
+              "EMA20": 3657.691853126519,
+              "EMA50": 3271.241918638142,
+              "EMA200": null,
+              "MACD": 313.3190142508197,
+              "MACD_Signal": 216.26902610961307,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 3531143.0,
+              "Close": 4541.48,
+              "Low": 4205.05,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (76.23) indicates overbought.",
+              "Current Volume: 3,531,143."
+            ],
+            "price": 4541.48
+          },
+          {
+            "date": "2025-06-16 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 76.74608772313357,
+              "EMA20": 3745.885009971613,
+              "EMA50": 3322.7116473189994,
+              "EMA200": null,
+              "MACD": 347.60311592981225,
+              "MACD_Signal": 242.53584407365292,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1389036.0,
+              "Close": 4583.72,
+              "Low": 4527.05,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (76.75) indicates overbought.",
+              "Current Volume: 1,389,036."
+            ],
+            "price": 4583.72
+          },
+          {
+            "date": "2025-06-17 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 76.93260405167153,
+              "EMA20": 3827.07691378384,
+              "EMA50": 3372.7386415417836,
+              "EMA200": null,
+              "MACD": 371.67364441415293,
+              "MACD_Signal": 268.36340414175294,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 993711.0,
+              "Close": 4598.4,
+              "Low": 4592.37,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (76.93) indicates overbought.",
+              "Current Volume: 993,711."
+            ],
+            "price": 4598.4
+          },
+          {
+            "date": "2025-06-18 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 76.77313975433901,
+              "EMA20": 3900.2000648520457,
+              "EMA50": 3420.6653614813217,
+              "EMA200": null,
+              "MACD": 386.01512804816184,
+              "MACD_Signal": 291.89374892303476,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1068216.0,
+              "Close": 4594.87,
+              "Low": 4587.57,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (76.77) indicates overbought.",
+              "Current Volume: 1,068,216."
+            ],
+            "price": 4594.87
+          },
+          {
+            "date": "2025-06-19 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 79.56112389253468,
+              "EMA20": 3986.9029158185176,
+              "EMA50": 3475.171817893819,
+              "EMA200": null,
+              "MACD": 410.0599357038873,
+              "MACD_Signal": 315.5269862792053,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1999349.0,
+              "Close": 4810.58,
+              "Low": 4587.65,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (79.56) indicates overbought.",
+              "Current Volume: 1,999,349."
+            ],
+            "price": 4810.58
+          },
+          {
+            "date": "2025-06-20 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 81.44929033913174,
+              "EMA20": 4081.5245428834205,
+              "EMA50": 3534.201550525434,
+              "EMA200": null,
+              "MACD": 437.77470026944,
+              "MACD_Signal": 339.9765290772522,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1934703.0,
+              "Close": 4980.43,
+              "Low": 4832.1,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (81.45) indicates overbought.",
+              "Current Volume: 1,934,703."
+            ],
+            "price": 4980.43
+          },
+          {
+            "date": "2025-06-23 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 74.44539191519497,
+              "EMA20": 4151.83744356119,
+              "EMA50": 3584.6175681518876,
+              "EMA200": null,
+              "MACD": 441.6866702251359,
+              "MACD_Signal": 360.318557306829,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1529463.0,
+              "Close": 4819.81,
+              "Low": 4801.73,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (74.45) indicates overbought.",
+              "Current Volume: 1,529,463."
+            ],
+            "price": 4819.81
+          },
+          {
+            "date": "2025-06-24 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 79.53655748556693,
+              "EMA20": 4256.551020364886,
+              "EMA50": 3649.9788399890685,
+              "EMA200": null,
+              "MACD": 474.1413854870043,
+              "MACD_Signal": 383.08312294286407,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 3625558.0,
+              "Close": 5251.33,
+              "Low": 4854.88,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (79.54) indicates overbought.",
+              "Current Volume: 3,625,558."
+            ],
+            "price": 5251.33
+          },
+          {
+            "date": "2025-06-25 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 79.84174861345792,
+              "EMA20": 4354.191875568231,
+              "EMA50": 3713.9710423424385,
+              "EMA200": null,
+              "MACD": 496.5946081510092,
+              "MACD_Signal": 405.7854199844931,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1298165.0,
+              "Close": 5281.78,
+              "Low": 5243.43,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (79.84) indicates overbought.",
+              "Current Volume: 1,298,165."
+            ],
+            "price": 5281.78
+          },
+          {
+            "date": "2025-06-26 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 78.96952707006595,
+              "EMA20": 4440.539315990304,
+              "EMA50": 3774.6325700937155,
+              "EMA200": null,
+              "MACD": 506.8565392051323,
+              "MACD_Signal": 425.99964382862095,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1253125.0,
+              "Close": 5260.84,
+              "Low": 5258.04,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (78.97) indicates overbought.",
+              "Current Volume: 1,253,125."
+            ],
+            "price": 5260.84
+          },
+          {
+            "date": "2025-06-27 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 71.26089983638663,
+              "EMA20": 4500.326047800751,
+              "EMA50": 3825.3646261684717,
+              "EMA200": null,
+              "MACD": 493.76105454149547,
+              "MACD_Signal": 439.5519259711959,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 2259913.0,
+              "Close": 5068.3,
+              "Low": 5005.08,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (71.26) indicates overbought.",
+              "Current Volume: 2,259,913."
+            ],
+            "price": 5068.3
+          },
+          {
+            "date": "2025-06-30 15:36:38.476298",
+            "symbol": "RELIANCE",
+            "indicators": {
+              "RSI": 72.50795250792623,
+              "EMA20": 4562.331186105442,
+              "EMA50": 3877.3652290638256,
+              "EMA200": null,
+              "MACD": 484.50161721766017,
+              "MACD_Signal": 448.5418642204888,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1152096.0,
+              "Close": 5151.38,
+              "Low": 5083.62,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (72.51) indicates overbought.",
+              "Current Volume: 1,152,096."
+            ],
+            "price": 5151.38
+          }
+        ]
+      },
+      "TCS": {
+        "symbol": "TCS",
+        "scenario": "BEAR_MARKET",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": -0.12222714210055663,
+          "annualized_return": -0.7753697518940368,
+          "volatility": 0.571887909219345,
+          "sharpe_ratio": -2.3156135794136636,
+          "max_drawdown": -0.24789338548062392,
+          "win_rate": 0.45454545454545453,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      },
+      "HDFCBANK": {
+        "symbol": "HDFCBANK",
+        "scenario": "BEAR_MARKET",
+        "total_days": 72,
+        "alerts_generated": 3,
+        "performance_metrics": {
+          "total_return": -0.03638603100999793,
+          "annualized_return": -0.3459406181842075,
+          "volatility": 0.5531932929135417,
+          "sharpe_ratio": -0.48875932179380016,
+          "max_drawdown": -0.21978147686441274,
+          "win_rate": 0.5,
+          "alert_frequency": 0.13636363636363635
+        },
+        "alerts": [
+          {
+            "date": "2025-06-18 15:36:38.645097",
+            "symbol": "HDFCBANK",
+            "indicators": {
+              "RSI": 74.40465141426125,
+              "EMA20": 2804.821834826522,
+              "EMA50": 2497.9890091844736,
+              "EMA200": null,
+              "MACD": 121.657337952739,
+              "MACD_Signal": 103.62350947452074,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 2912550.0,
+              "Close": 3178.54,
+              "Low": 2979.9,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (74.40) indicates overbought.",
+              "Current Volume: 2,912,550."
+            ],
+            "price": 3178.54
+          },
+          {
+            "date": "2025-06-19 15:36:38.645097",
+            "symbol": "HDFCBANK",
+            "indicators": {
+              "RSI": 78.38504032829238,
+              "EMA20": 2856.0207077001864,
+              "EMA50": 2531.103557843906,
+              "EMA200": null,
+              "MACD": 150.02756610242022,
+              "MACD_Signal": 112.90432080010065,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1951334.0,
+              "Close": 3342.41,
+              "Low": 3172.05,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (78.39) indicates overbought.",
+              "Current Volume: 1,951,334."
+            ],
+            "price": 3342.41
+          },
+          {
+            "date": "2025-06-20 15:36:38.645097",
+            "symbol": "HDFCBANK",
+            "indicators": {
+              "RSI": 79.76715204349539,
+              "EMA20": 2908.7092117287402,
+              "EMA50": 2565.5406732225765,
+              "EMA200": null,
+              "MACD": 175.87720278832512,
+              "MACD_Signal": 125.49889719774555,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 1296138.0,
+              "Close": 3409.25,
+              "Low": 3351.19,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (79.77) indicates overbought.",
+              "Current Volume: 1,296,138."
+            ],
+            "price": 3409.25
+          }
+        ]
+      }
+    },
+    "SIDEWAYS": {
+      "RELIANCE": {
+        "symbol": "RELIANCE",
+        "scenario": "SIDEWAYS",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": -0.01261713950375043,
+          "annualized_return": -0.13536089388293482,
+          "volatility": 0.19977633736502695,
+          "sharpe_ratio": -0.6277620371531165,
+          "max_drawdown": -0.05476484006466815,
+          "win_rate": 0.45454545454545453,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      },
+      "TCS": {
+        "symbol": "TCS",
+        "scenario": "SIDEWAYS",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": -0.03680038467139968,
+          "annualized_return": -0.34915492392820224,
+          "volatility": 0.21327954733527205,
+          "sharpe_ratio": -1.9048905226914978,
+          "max_drawdown": -0.03913798518354304,
+          "win_rate": 0.4090909090909091,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      },
+      "HDFCBANK": {
+        "symbol": "HDFCBANK",
+        "scenario": "SIDEWAYS",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": 0.008568474904242729,
+          "annualized_return": 0.10266489593553518,
+          "volatility": 0.1930831079853906,
+          "sharpe_ratio": 0.6031362675209804,
+          "max_drawdown": -0.02971296975311037,
+          "win_rate": 0.5454545454545454,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      }
+    },
+    "VOLATILE": {
+      "RELIANCE": {
+        "symbol": "RELIANCE",
+        "scenario": "VOLATILE",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": 0.019002559228127325,
+          "annualized_return": 0.24063507733097356,
+          "volatility": 0.7606936170259687,
+          "sharpe_ratio": 0.6622226922383304,
+          "max_drawdown": -0.13236104065511983,
+          "win_rate": 0.5454545454545454,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      },
+      "TCS": {
+        "symbol": "TCS",
+        "scenario": "VOLATILE",
+        "total_days": 72,
+        "alerts_generated": 1,
+        "performance_metrics": {
+          "total_return": 0.3542670201599025,
+          "annualized_return": 31.25617886329308,
+          "volatility": 0.6496808917592147,
+          "sharpe_ratio": 5.711696505262717,
+          "max_drawdown": -0.11214875176214116,
+          "win_rate": 0.6818181818181818,
+          "alert_frequency": 0.045454545454545456
+        },
+        "alerts": [
+          {
+            "date": "2025-06-24 15:36:39.066211",
+            "symbol": "TCS",
+            "indicators": {
+              "RSI": 71.85397715575601,
+              "EMA20": 5539.343505986669,
+              "EMA50": 4973.758341301976,
+              "EMA200": null,
+              "MACD": 391.4282370622295,
+              "MACD_Signal": 300.44397597973614,
+              "BB_Lower": null,
+              "BB_Upper": null,
+              "BB_Width": null,
+              "Volume": 2144684.0,
+              "Close": 6462.31,
+              "Low": 6274.28,
+              "Volume_Spike": false,
+              "Crossover": "None"
+            },
+            "details": [
+              "RSI (71.85) indicates overbought.",
+              "Current Volume: 2,144,684."
+            ],
+            "price": 6462.31
+          }
+        ]
+      },
+      "HDFCBANK": {
+        "symbol": "HDFCBANK",
+        "scenario": "VOLATILE",
+        "total_days": 72,
+        "alerts_generated": 0,
+        "performance_metrics": {
+          "total_return": 0.04826976788222148,
+          "annualized_return": 0.7159696680300021,
+          "volatility": 0.6140903306463927,
+          "sharpe_ratio": 1.1840506084501097,
+          "max_drawdown": -0.15291979299106426,
+          "win_rate": 0.5454545454545454,
+          "alert_frequency": 0.0
+        },
+        "alerts": []
+      }
+    }
+  },
+  "report": "============================================================\nRADAR SCANNER TEST REPORT\n============================================================\nGenerated: 2025-07-05 15:36:39\n\nSUMMARY STATISTICS:\n  Total tests run: 12\n  Total alerts generated: 20\n  Average alerts per test: 1.67\n\nDETAILED RESULTS:\n----------------------------------------\nSymbol: RELIANCE\nScenario: BULL_MARKET\nAlerts: 0\n  Total Return: -13.58%\n  Sharpe Ratio: -3.62\n  Max Drawdown: -16.30%\n\nSymbol: TCS\nScenario: BULL_MARKET\nAlerts: 0\n  Total Return: -7.68%\n  Sharpe Ratio: -2.53\n  Max Drawdown: -9.85%\n\nSymbol: HDFCBANK\nScenario: BULL_MARKET\nAlerts: 1\n  Total Return: 1.67%\n  Sharpe Ratio: 0.73\n  Max Drawdown: -6.77%\n\nSymbol: RELIANCE\nScenario: BEAR_MARKET\nAlerts: 15\n  Total Return: 40.80%\n  Sharpe Ratio: 6.13\n  Max Drawdown: -13.13%\n\nSymbol: TCS\nScenario: BEAR_MARKET\nAlerts: 0\n  Total Return: -12.22%\n  Sharpe Ratio: -2.32\n  Max Drawdown: -24.79%\n\nSymbol: HDFCBANK\nScenario: BEAR_MARKET\nAlerts: 3\n  Total Return: -3.64%\n  Sharpe Ratio: -0.49\n  Max Drawdown: -21.98%\n\nSymbol: RELIANCE\nScenario: SIDEWAYS\nAlerts: 0\n  Total Return: -1.26%\n  Sharpe Ratio: -0.63\n  Max Drawdown: -5.48%\n\nSymbol: TCS\nScenario: SIDEWAYS\nAlerts: 0\n  Total Return: -3.68%\n  Sharpe Ratio: -1.90\n  Max Drawdown: -3.91%\n\nSymbol: HDFCBANK\nScenario: SIDEWAYS\nAlerts: 0\n  Total Return: 0.86%\n  Sharpe Ratio: 0.60\n  Max Drawdown: -2.97%\n\nSymbol: RELIANCE\nScenario: VOLATILE\nAlerts: 0\n  Total Return: 1.90%\n  Sharpe Ratio: 0.66\n  Max Drawdown: -13.24%\n\nSymbol: TCS\nScenario: VOLATILE\nAlerts: 1\n  Total Return: 35.43%\n  Sharpe Ratio: 5.71\n  Max Drawdown: -11.21%\n\nSymbol: HDFCBANK\nScenario: VOLATILE\nAlerts: 0\n  Total Return: 4.83%\n  Sharpe Ratio: 1.18\n  Max Drawdown: -15.29%\n",
+  "timestamp": "2025-07-05T15:36:39.233840"
+}

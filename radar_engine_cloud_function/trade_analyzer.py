@@ -70,6 +70,41 @@ def analyze_setup(indicators, df_history, rules, stock_sector=None, strong_secto
 
     return score, reasons
 
+def analyze_for_trade_setup(instrument_token, indicators, df_history=None):
+    """
+    Simple trade setup analyzer that checks basic indicator conditions.
+    Returns (setup_found, details) tuple.
+    """
+    setup_found = False
+    details = []
+
+    if indicators.get('RSI') is not None:
+        if indicators['RSI'] < 30:
+            details.append(f"RSI ({indicators['RSI']:.2f}) indicates oversold.")
+            setup_found = True
+        elif indicators['RSI'] > 70:
+            details.append(f"RSI ({indicators['RSI']:.2f}) indicates overbought.")
+            setup_found = True
+
+    if indicators.get('EMA50') is not None and indicators.get('EMA200') is not None:
+        if indicators['EMA50'] > indicators['EMA200']:
+            details.append(f"EMA50 ({indicators['EMA50']:.2f}) is above EMA200 ({indicators['EMA200']:.2f}) - potentially bullish trend.")
+            setup_found = True
+        else:
+            details.append(f"EMA50 ({indicators['EMA50']:.2f}) is below EMA200 ({indicators['EMA200']:.2f}) - potentially bearish trend.")
+            setup_found = True
+
+    if indicators.get('Volume') is not None and indicators['Volume'] > 0:
+        details.append(f"Current Volume: {indicators['Volume']:,.0f}.")
+
+    if setup_found:
+        print(f"\n--- RADAR ALERT for {instrument_token}! ---")
+        for detail in details:
+            print(f"- {detail}")
+        print("--------------------------------------")
+
+    return setup_found, details
+
 def save_alerts_to_db(alerts_to_save, strategy_name):
     """Saves a batch of alerts to the PostgreSQL database, tagging them with a strategy name."""
     if not alerts_to_save:

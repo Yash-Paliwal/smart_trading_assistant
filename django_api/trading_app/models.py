@@ -73,3 +73,76 @@ class TradeLog(models.Model):
 
     class Meta:
         ordering = ['-trade_date']
+
+
+class HistoricalData(models.Model):
+    """
+    Model to store historical market data for testing and analysis.
+    """
+    instrument_key = models.CharField(max_length=100, db_index=True)
+    date = models.DateField(db_index=True)
+    open_price = models.FloatField()
+    high_price = models.FloatField()
+    low_price = models.FloatField()
+    close_price = models.FloatField()
+    volume = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('instrument_key', 'date')
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['instrument_key', 'date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.instrument_key} - {self.date}"
+    
+    @classmethod
+    def get_data_for_symbol(cls, instrument_key, days=100):
+        """
+        Get historical data for a symbol.
+        
+        Args:
+            instrument_key (str): The instrument key
+            days (int): Number of days to retrieve
+            
+        Returns:
+            QuerySet: Historical data ordered by date
+        """
+        return cls.objects.filter(
+            instrument_key=instrument_key
+        ).order_by('date').values(
+            'date', 'open_price', 'high_price', 'low_price', 'close_price', 'volume'
+        )
+    
+    @classmethod
+    def store_dataframe(cls, instrument_key, df):
+        """
+        Store a pandas DataFrame as historical data.
+        
+        Args:
+            instrument_key (str): The instrument key
+            df (pd.DataFrame): DataFrame with OHLCV data
+        """
+        # Convert DataFrame to list of dictionaries
+        records = []
+        for date, row in df.iterrows():
+            records.append({
+                'instrument_key': instrument_key,
+                'date': date.date() if hasattr(date, 'date') else date,
+                'open_price': row['open'],
+                'high_price': row['high'],
+                'low_price': row['low'],
+                'close_price': row['close'],
+                'volume': row['volume']
+            })
+        
+        # Bulk create or update
+        for record in records:
+            cls.objects.update_or_create(
+                instrument_key=record['instrument_key'],
+                date=record['date'],
+                defaults=record
+            )
