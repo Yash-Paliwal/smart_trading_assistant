@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
 import json
@@ -29,6 +29,8 @@ import subprocess
 import time
 from django.conf import settings
 from decimal import Decimal
+from collections import defaultdict, Counter
+from django.db.models.functions import TruncDate
 
 # Add this function after the existing imports and before the ViewSets
 
@@ -589,43 +591,31 @@ def run_intraday_scanner():
 @api_view(['GET'])
 def virtual_trading_dashboard(request):
     """
-    Get virtual trading dashboard data for the current user with real-time P&L calculations
+    Get virtual trading dashboard data for the current user with real-time P&L calculations and advanced insights
     """
     if not request.user.is_authenticated:
         return Response(
             {'error': 'Authentication required. Please log in first.'},
             status=401
         )
-    
     try:
         wallet = VirtualWallet.objects.get(user=request.user)
-        
         # Get recent trades
-        recent_trades = VirtualTrade.objects.filter(
-            wallet=wallet
-        ).order_by('-entry_time')[:10]
-        
+        recent_trades = VirtualTrade.objects.filter(wallet=wallet).order_by('-entry_time')[:10]
         # Get open trades with real-time P&L calculations
         open_trades = VirtualTrade.objects.filter(wallet=wallet, status='EXECUTED')
         open_trades_data = []
         total_unrealized_pnl = Decimal('0.00')
-        
         for trade in open_trades:
-            # Get current market price
             current_price = get_current_market_price(trade.instrument_key)
-            
             trade_data = VirtualTradeSerializer(trade).data
-            
             if current_price:
-                # Calculate unrealized P&L
                 if trade.trade_type == 'BUY':
                     unrealized_pnl = (current_price - trade.entry_price) * trade.quantity
-                else:  # SELL
+                else:
                     unrealized_pnl = (trade.entry_price - current_price) * trade.quantity
-                
                 unrealized_pnl_percentage = (unrealized_pnl / (trade.entry_price * trade.quantity)) * 100
                 total_unrealized_pnl += unrealized_pnl
-                
                 trade_data.update({
                     'current_price': float(current_price),
                     'unrealized_pnl': float(unrealized_pnl),
@@ -639,35 +629,97 @@ def virtual_trading_dashboard(request):
                     'unrealized_pnl_percentage': None,
                     'is_profitable': None
                 })
-            
             open_trades_data.append(trade_data)
-        
         # Get open positions (legacy)
         open_positions = VirtualPosition.objects.filter(wallet=wallet)
-        
         # Get trade statistics
-        closed_trades = VirtualTrade.objects.filter(
-            wallet=wallet,
-            status='CLOSED'
-        )
-        
+        closed_trades = VirtualTrade.objects.filter(wallet=wallet, status='CLOSED')
         profitable_trades = closed_trades.filter(pnl__gt=0).count()
         total_closed_trades = closed_trades.count()
-        avg_profit = closed_trades.filter(pnl__gt=0).aggregate(
-            avg=Avg('pnl')
-        )['avg'] or 0
-        avg_loss = closed_trades.filter(pnl__lt=0).aggregate(
-            avg=Avg('pnl')
-        )['avg'] or 0
-        
+        avg_profit = closed_trades.filter(pnl__gt=0).aggregate(avg=Avg('pnl'))['avg'] or 0
+        avg_loss = closed_trades.filter(pnl__lt=0).aggregate(avg=Avg('pnl'))['avg'] or 0
         # Calculate total portfolio value (balance + unrealized P&L)
         total_portfolio_value = wallet.balance + total_unrealized_pnl
-        
+        # --- Advanced Insights ---
+        # Best/Worst Trade
+        best_trade = closed_trades.order_by('-pnl').first()
+        worst_trade = closed_trades.order_by('pnl').first()
+        # Per-strategy stats
+        strategy_stats = defaultdict(lambda: {'count': 0, 'win': 0, 'loss': 0, 'total_pnl': 0})
+        for trade in closed_trades:
+            strategy = trade.alert.source_strategy if trade.alert else 'Unknown'
+            strategy_stats[strategy]['count'] += 1
+            if trade.pnl and trade.pnl > 0:
+                strategy_stats[strategy]['win'] += 1
+            elif trade.pnl and trade.pnl < 0:
+                strategy_stats[strategy]['loss'] += 1
+            strategy_stats[strategy]['total_pnl'] += float(trade.pnl or 0)
+        strategy_insights = []
+        for strat, stats in strategy_stats.items():
+            win_rate = (stats['win'] / stats['count']) * 100 if stats['count'] else 0
+            avg_pnl = stats['total_pnl'] / stats['count'] if stats['count'] else 0
+            strategy_insights.append({
+                'strategy': strat,
+                'count': stats['count'],
+                'win_rate': win_rate,
+                'avg_pnl': avg_pnl
+            })
+        # Equity curve (daily balance)
+        equity_curve = []
+        daily = closed_trades.annotate(day=TruncDate('exit_time')).values('day').annotate(
+            daily_pnl=Sum('pnl')
+        ).order_by('day')
+        balance = float(wallet.balance)
+        for d in daily:
+            balance += float(d['daily_pnl'] or 0)
+            equity_curve.append({'date': d['day'], 'balance': balance})
+        # Win/loss streaks
+        streaks = {'current_win': 0, 'current_loss': 0, 'longest_win': 0, 'longest_loss': 0}
+        last_result = None
+        current_win = current_loss = longest_win = longest_loss = 0
+        for trade in closed_trades.order_by('exit_time'):
+            if trade.pnl is not None:
+                if trade.pnl > 0:
+                    if last_result == 'win':
+                        current_win += 1
+                    else:
+                        current_win = 1
+                    longest_win = max(longest_win, current_win)
+                    current_loss = 0
+                    last_result = 'win'
+                elif trade.pnl < 0:
+                    if last_result == 'loss':
+                        current_loss += 1
+                    else:
+                        current_loss = 1
+                    longest_loss = max(longest_loss, current_loss)
+                    current_win = 0
+                    last_result = 'loss'
+        streaks['current_win'] = current_win
+        streaks['current_loss'] = current_loss
+        streaks['longest_win'] = longest_win
+        streaks['longest_loss'] = longest_loss
+        # Most traded stocks
+        symbol_counts = Counter([t.tradingsymbol for t in closed_trades])
+        most_traded = symbol_counts.most_common(5)
+        # Fastest/slowest trade
+        fastest_trade = slowest_trade = None
+        min_duration = None
+        max_duration = None
+        for trade in closed_trades:
+            if trade.entry_time and trade.exit_time:
+                duration = (trade.exit_time - trade.entry_time).total_seconds()
+                if min_duration is None or duration < min_duration:
+                    min_duration = duration
+                    fastest_trade = trade
+                if max_duration is None or duration > max_duration:
+                    max_duration = duration
+                    slowest_trade = trade
         dashboard_data = {
             'wallet': VirtualWalletSerializer(wallet).data,
             'recent_trades': VirtualTradeSerializer(recent_trades, many=True).data,
-            'open_trades': open_trades_data,  # New: open trades with real-time P&L
-            'open_positions': VirtualPositionSerializer(open_positions, many=True).data,  # Legacy
+            'open_trades': open_trades_data,
+            'open_positions': VirtualPositionSerializer(open_positions, many=True).data,
             'statistics': {
                 'total_unrealized_pnl': float(total_unrealized_pnl),
                 'total_portfolio_value': float(total_portfolio_value),
@@ -677,11 +729,19 @@ def virtual_trading_dashboard(request):
                 'avg_loss': avg_loss,
                 'profit_factor': abs(avg_profit / avg_loss) if avg_loss != 0 else 0,
                 'open_positions_count': open_trades.count()
+            },
+            'insights': {
+                'best_trade': VirtualTradeSerializer(best_trade).data if best_trade else None,
+                'worst_trade': VirtualTradeSerializer(worst_trade).data if worst_trade else None,
+                'strategy_stats': strategy_insights,
+                'equity_curve': equity_curve,
+                'streaks': streaks,
+                'most_traded': [{'symbol': s, 'count': c} for s, c in most_traded],
+                'fastest_trade': VirtualTradeSerializer(fastest_trade).data if fastest_trade else None,
+                'slowest_trade': VirtualTradeSerializer(slowest_trade).data if slowest_trade else None
             }
         }
-        
         return Response(dashboard_data)
-        
     except VirtualWallet.DoesNotExist:
         return Response(
             {'error': 'Virtual wallet not found. Please create one first.'},
@@ -692,3 +752,171 @@ def virtual_trading_dashboard(request):
             {'error': f'Error loading dashboard: {str(e)}'},
             status=500
         )
+
+@api_view(['GET'])
+def get_screener_with_entry_status(request):
+    """
+    Return the full premarket screener list for today, and for each screener stock, include a field indicating if an entry alert exists (and its ID/status if so).
+    """
+    today = timezone.now().date()
+    # Get all screening alerts for today (all strategies)
+    screening_alerts = RadarAlert.objects.filter(
+        source_strategy__in=['Bullish_Scan', 'Daily_Confluence_Scan', 'Full_Scan'],
+        timestamp__date=today
+    ).order_by('-timestamp')
+
+    # Get all entry alerts for today
+    entry_alerts = RadarAlert.objects.filter(
+        source_strategy__in=['RealTime_ORB', 'Intraday_ORB_Breakout'],
+        timestamp__date=today
+    )
+    entry_alert_map = {}
+    for entry in entry_alerts:
+        entry_alert_map[entry.instrument_key] = {
+            'id': entry.id,
+            'status': entry.status,
+            'expires_at': entry.expires_at,
+            'priority': entry.priority,
+            'alert_type': entry.alert_type,
+            'source_strategy': entry.source_strategy
+        }
+
+    # Get instrument symbol map
+    instrument_keys = set(a.instrument_key for a in screening_alerts)
+    instruments = Instrument.objects.filter(instrument_key__in=instrument_keys).values('instrument_key', 'tradingsymbol')
+    symbol_map = {i['instrument_key']: i['tradingsymbol'] for i in instruments}
+
+    results = []
+    for alert in screening_alerts:
+        entry_status = 'waiting'
+        entry_alert_info = None
+        if alert.instrument_key in entry_alert_map:
+            entry_status = 'triggered'
+            entry_alert_info = entry_alert_map[alert.instrument_key]
+        results.append({
+            'id': alert.id,
+            'instrument_key': alert.instrument_key,
+            'tradingsymbol': symbol_map.get(alert.instrument_key, ''),
+            'source_strategy': alert.source_strategy,
+            'alert_details': alert.alert_details,
+            'indicators': alert.indicators,
+            'timestamp': alert.timestamp,
+            'status': alert.status,
+            'priority': alert.priority,
+            'alert_type': alert.alert_type,
+            'entry_status': entry_status,
+            'entry_alert': entry_alert_info
+        })
+    return Response({'results': results})
+
+@api_view(['GET'])
+def trade_journal_dashboard(request):
+    """
+    Get trade journal analytics/insights for real trades (TradeLog) for the current user.
+    """
+    # Removed authentication check for public access
+    try:
+        trades = TradeLog.objects.filter(instrument__isnull=False)
+        closed_trades = trades.filter(exit_price__isnull=False)
+        total_trades = trades.count()
+        win_trades = closed_trades.filter(pnl__gt=0).count()
+        loss_trades = closed_trades.filter(pnl__lt=0).count()
+        win_rate = (win_trades / closed_trades.count()) * 100 if closed_trades.count() else 0
+        avg_profit = closed_trades.filter(pnl__gt=0).aggregate(avg=Avg('pnl'))['avg'] or 0
+        avg_loss = closed_trades.filter(pnl__lt=0).aggregate(avg=Avg('pnl'))['avg'] or 0
+        best_trade = closed_trades.order_by('-pnl').first()
+        worst_trade = closed_trades.order_by('pnl').first()
+        # Per-strategy stats (if strategy field exists)
+        strategy_stats = defaultdict(lambda: {'count': 0, 'win': 0, 'loss': 0, 'total_pnl': 0})
+        for trade in closed_trades:
+            strategy = getattr(trade, 'strategy', 'Unknown')
+            strategy_stats[strategy]['count'] += 1
+            if trade.pnl and trade.pnl > 0:
+                strategy_stats[strategy]['win'] += 1
+            elif trade.pnl and trade.pnl < 0:
+                strategy_stats[strategy]['loss'] += 1
+            strategy_stats[strategy]['total_pnl'] += float(trade.pnl or 0)
+        strategy_insights = []
+        for strat, stats in strategy_stats.items():
+            win_rate_s = (stats['win'] / stats['count']) * 100 if stats['count'] else 0
+            avg_pnl = stats['total_pnl'] / stats['count'] if stats['count'] else 0
+            strategy_insights.append({
+                'strategy': strat,
+                'count': stats['count'],
+                'win_rate': win_rate_s,
+                'avg_pnl': avg_pnl
+            })
+        # Equity curve (daily balance)
+        equity_curve = []
+        daily = closed_trades.annotate(day=TruncDate('trade_date')).values('day').annotate(
+            daily_pnl=Sum('pnl')
+        ).order_by('day')
+        balance = 0
+        for d in daily:
+            balance += float(d['daily_pnl'] or 0)
+            equity_curve.append({'date': d['day'], 'balance': balance})
+        # Win/loss streaks
+        streaks = {'current_win': 0, 'current_loss': 0, 'longest_win': 0, 'longest_loss': 0}
+        last_result = None
+        current_win = current_loss = longest_win = longest_loss = 0
+        for trade in closed_trades.order_by('trade_date'):
+            if trade.pnl is not None:
+                if trade.pnl > 0:
+                    if last_result == 'win':
+                        current_win += 1
+                    else:
+                        current_win = 1
+                    longest_win = max(longest_win, current_win)
+                    current_loss = 0
+                    last_result = 'win'
+                elif trade.pnl < 0:
+                    if last_result == 'loss':
+                        current_loss += 1
+                    else:
+                        current_loss = 1
+                    longest_loss = max(longest_loss, current_loss)
+                    current_win = 0
+                    last_result = 'loss'
+        streaks['current_win'] = current_win
+        streaks['current_loss'] = current_loss
+        streaks['longest_win'] = longest_win
+        streaks['longest_loss'] = longest_loss
+        # Most traded stocks
+        symbol_counts = Counter([t.instrument.tradingsymbol for t in closed_trades if t.instrument])
+        most_traded = symbol_counts.most_common(5)
+        # Fastest/slowest trade
+        fastest_trade = slowest_trade = None
+        min_duration = None
+        max_duration = None
+        for trade in closed_trades:
+            if hasattr(trade, 'entry_time') and hasattr(trade, 'exit_time') and trade.entry_time and trade.exit_time:
+                duration = (trade.exit_time - trade.entry_time).total_seconds()
+                if min_duration is None or duration < min_duration:
+                    min_duration = duration
+                    fastest_trade = trade
+                if max_duration is None or duration > max_duration:
+                    max_duration = duration
+                    slowest_trade = trade
+        from .serializers import TradeLogSerializer
+        return Response({
+            'statistics': {
+                'total_trades': total_trades,
+                'win_trades': win_trades,
+                'loss_trades': loss_trades,
+                'win_rate': win_rate,
+                'avg_profit': avg_profit,
+                'avg_loss': avg_loss,
+            },
+            'insights': {
+                'best_trade': TradeLogSerializer(best_trade).data if best_trade else None,
+                'worst_trade': TradeLogSerializer(worst_trade).data if worst_trade else None,
+                'strategy_stats': strategy_insights,
+                'equity_curve': equity_curve,
+                'streaks': streaks,
+                'most_traded': [{'symbol': s, 'count': c} for s, c in most_traded],
+                'fastest_trade': TradeLogSerializer(fastest_trade).data if fastest_trade else None,
+                'slowest_trade': TradeLogSerializer(slowest_trade).data if slowest_trade else None
+            }
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

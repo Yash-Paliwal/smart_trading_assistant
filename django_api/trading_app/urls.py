@@ -3,7 +3,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import CurrentUserView
+from .views import CurrentUserView, trade_journal_dashboard
 
 router = DefaultRouter()
 router.register(r'instruments', views.InstrumentViewSet)
@@ -14,6 +14,7 @@ router.register(r'virtual-trades', views.VirtualTradeViewSet)
 router.register(r'virtual-positions', views.VirtualPositionViewSet)
 
 urlpatterns = [
+    path('screener-status/', views.get_screener_with_entry_status, name='get_screener_with_entry_status'),
     path('', include(router.urls)),
     path('auth/upstox/login/', views.upstox_login, name='upstox_login'),
     path('auth/upstox/callback/', views.upstox_callback, name='upstox_callback'),
@@ -21,6 +22,7 @@ urlpatterns = [
     path('trigger-scan/', views.trigger_scan, name='trigger_scan'),
     path('virtual-trading-dashboard/', views.virtual_trading_dashboard, name='virtual_trading_dashboard'),
     path('auth/user/', CurrentUserView.as_view(), name='current-user'),
+    path('trade-journal-dashboard/', trade_journal_dashboard, name='trade_journal_dashboard'),
     # Legacy routes for backward compatibility
     path('alerts/', views.RadarAlertListView.as_view(), name='radar-alert-list'),
     path('tradelogs/', views.TradeLogListCreateView.as_view(), name='tradelog-list-create'),

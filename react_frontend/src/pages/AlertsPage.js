@@ -1,10 +1,11 @@
 // src/pages/AlertsPage.js
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { getAlerts, getTradeLogs, createTradeLog } from '../api/apiService';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { getAlerts, getTradeLogs, createTradeLog, getScreenerStatus } from '../api/apiService';
 import AlertCard from '../components/AlertCard';
 import TradePlanModal from '../components/TradePlanModal';
 import websocketService from '../services/websocketService';
+import { useToast } from '../components/ToastProvider';
 
 const AlertsPage = ({ setCurrentPage }) => {
   const [alerts, setAlerts] = useState([]);
@@ -16,7 +17,7 @@ const AlertsPage = ({ setCurrentPage }) => {
   const [selectedStock, setSelectedStock] = useState(null);
   
   // **NEW: Alert category management**
-  const [alertCategory, setAlertCategory] = useState('ALL'); // ALL, SCREENING, ENTRY
+  const [alertCategory, setAlertCategory] = useState('ENTRY'); // ENTRY, SCREENING
   const [lastUpdate, setLastUpdate] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30); // seconds
@@ -30,6 +31,13 @@ const AlertsPage = ({ setCurrentPage }) => {
   const [isScanning, setIsScanning] = useState(false);
 
   const [livePrices, setLivePrices] = useState({});
+  const [screenerStocks, setScreenerStocks] = useState([]); // For new screener API
+  const [screenerFilter, setScreenerFilter] = useState('ALL'); // ALL, WAITING, TRIGGERED
+  const entryAlertRefs = useRef({}); // For smooth scroll
+  const [highlightedEntryId, setHighlightedEntryId] = useState(null); // For microinteraction
+  const [showExpired, setShowExpired] = useState(false);
+
+  const toast = useToast();
 
   useEffect(() => {
     const checkMarketStatus = () => {
@@ -76,78 +84,35 @@ const AlertsPage = ({ setCurrentPage }) => {
 
   const fetchPageData = useCallback(async () => {
     try {
-      const [alertsResponse, tradeLogsResponse] = await Promise.all([
-        getAlerts(`?category=${alertCategory}`),
-        getTradeLogs()
-      ]);
-      
-      const alertsData = alertsResponse.data.results || [];
-      
-      // **NEW: Separate handling for different alert types**
-      const screeningAlerts = alertsData.filter(alert => alert.category === 'SCREENING');
-      const entryAlerts = alertsData.filter(alert => alert.category === 'ENTRY');
-      
-      // Sort screening alerts by confidence score
-      const sortedScreeningAlerts = screeningAlerts.sort((a, b) => 
-        (b.alert_details?.score || 0) - (a.alert_details?.score || 0)
-      );
-      
-      // Sort entry alerts by priority and remaining time
-      const sortedEntryAlerts = entryAlerts.sort((a, b) => {
-        // Sort by priority first (HIGH > MEDIUM > LOW)
-        const priorityOrder = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
-        const aPriority = priorityOrder[a.priority] || 1;
-        const bPriority = priorityOrder[b.priority] || 1;
-        
-        if (aPriority !== bPriority) {
-          return bPriority - aPriority;
-        }
-        
-        // Then by remaining time (shorter time first - more urgent)
-        const aTime = a.remaining_minutes || 999;
-        const bTime = b.remaining_minutes || 999;
-        return aTime - bTime;
-      });
-      
-      // Combine alerts based on category filter
-      let finalAlerts = [];
-      if (alertCategory === 'ALL') {
-        finalAlerts = [...sortedEntryAlerts, ...sortedScreeningAlerts];
-      } else if (alertCategory === 'ENTRY') {
-        finalAlerts = sortedEntryAlerts;
-      } else if (alertCategory === 'SCREENING') {
-        finalAlerts = sortedScreeningAlerts;
-      }
-      
-      setAlerts(finalAlerts);
-      setLastUpdate(new Date());
-      
-      // Determine market trend from screening alerts
-      if (screeningAlerts.length > 0) {
-        const firstAlertStrategy = screeningAlerts[0].source_strategy;
-        if (firstAlertStrategy === 'Bullish_Scan') {
-          setMarketTrend('UP');
-        } else if (firstAlertStrategy === 'Bearish_Scan') {
-          setMarketTrend('DOWN');
-        } else {
-          setMarketTrend('NEUTRAL');
-        }
-      } else {
-        setMarketTrend('NEUTRAL');
-      }
-
+      let screeningData = [];
+      let alertsData = [];
+      let tradeLogsResponse = await getTradeLogs();
       const plannedKeys = new Set((tradeLogsResponse.data.results || []).map(log => log.instrument_key));
       setPlannedStockKeys(plannedKeys);
-      
+
+      if (alertCategory === 'SCREENING') {
+        // Use new API for screening results
+        const screenerResponse = await getScreenerStatus();
+        screeningData = screenerResponse.data.results || [];
+        setScreenerStocks(screeningData);
+        setAlerts([]); // Not used for screening tab now
+      } else {
+        // Use old logic for ENTRY/ALL
+        const alertsResponse = await getAlerts(`?category=${alertCategory}`);
+        alertsData = alertsResponse.data.results || [];
+        setAlerts(alertsData);
+      }
+      setLastUpdate(new Date());
       setError(null);
+      setLoading(false);
+      setIsRefreshing(false);
     } catch (err) {
       setError('Failed to fetch data. Make sure the Django API server is running.');
+      setLoading(false);
+      setIsRefreshing(false);
       console.error(err);
-    } finally {
-      if (loading) setLoading(false);
-      setIsRefreshing(false); // **NEW: Reset refresh state**
     }
-  }, [loading, alertCategory]);
+  }, [alertCategory]);
 
   // **NEW: Trigger actual scanning function**
   const triggerScan = async () => {
@@ -178,6 +143,7 @@ const AlertsPage = ({ setCurrentPage }) => {
       if (scanData.new_alerts > 0) {
         // You could add a toast notification here
         console.log(`Scan completed: ${scanData.new_alerts} new alerts found`);
+        toast('Scan complete! New alerts found.', 'info');
       } else {
         console.log('Scan completed: No new alerts found');
       }
@@ -188,6 +154,7 @@ const AlertsPage = ({ setCurrentPage }) => {
     } catch (err) {
       console.error('Scan failed:', err);
       setError(`Scan failed: ${err.message}`);
+      toast('Scan failed. Please try again.', 'error');
     } finally {
       setIsScanning(false);
     }
@@ -239,12 +206,14 @@ const AlertsPage = ({ setCurrentPage }) => {
   const handleSavePlan = async (tradePlan) => {
     try {
       await createTradeLog(tradePlan);
+      toast('Trade plan saved!', 'success');
       if (setCurrentPage) {
         setCurrentPage('plans');
       }
       handleCloseModal();
     } catch (err) {
       console.error("Failed to save trade plan:", err);
+      toast('Failed to save trade plan. Please try again.', 'error');
     }
   };
 
@@ -297,6 +266,54 @@ const AlertsPage = ({ setCurrentPage }) => {
     return isScanning || isRefreshing || (!marketStatus.isOpen && alertCategory === 'ENTRY');
   };
 
+  // Stats for screening
+  const getScreeningStats = () => {
+    const total = screenerStocks.length;
+    const triggered = screenerStocks.filter(s => s.entry_status === 'triggered').length;
+    const waiting = total - triggered;
+    return { total, triggered, waiting };
+  };
+  const screeningStats = getScreeningStats();
+
+  // Filtered screening stocks
+  const filteredScreenerStocks = screenerStocks.filter(stock => {
+    if (screenerFilter === 'ALL') return true;
+    if (screenerFilter === 'WAITING') return stock.entry_status !== 'triggered';
+    if (screenerFilter === 'TRIGGERED') return stock.entry_status === 'triggered';
+    return true;
+  });
+
+  // Smooth scroll to entry alert
+  const handleViewEntryAlert = (instrument_key) => {
+    setCurrentPage && setCurrentPage('alerts');
+    setTimeout(() => {
+      if (entryAlertRefs.current[instrument_key]) {
+        entryAlertRefs.current[instrument_key].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setHighlightedEntryId(instrument_key);
+        setTimeout(() => setHighlightedEntryId(null), 2000);
+      }
+    }, 100);
+    setAlertCategory('ENTRY');
+  };
+
+  // Filter out expired entry alerts for the ENTRY tab (strict: only show non-expired in main list)
+  const filteredEntryAlerts = alerts.filter(alert => {
+    if (alertCategory !== 'ENTRY') return true;
+    // Only show if NOT expired
+    if (alert.status === 'EXPIRED') return false;
+    if (typeof alert.remaining_minutes === 'number' && alert.remaining_minutes <= 0) return false;
+    return true;
+  });
+
+  // Collect expired entry alerts for collapsible section (strict: only expired)
+  const expiredEntryAlerts = alerts.filter(alert => {
+    if (alertCategory !== 'ENTRY') return false;
+    // Only show if expired
+    if (alert.status === 'EXPIRED') return true;
+    if (typeof alert.remaining_minutes === 'number' && alert.remaining_minutes <= 0) return true;
+    return false;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="container mx-auto p-4 md:p-8">
@@ -333,26 +350,11 @@ const AlertsPage = ({ setCurrentPage }) => {
             </div>
           </div>
           
-          {/* **NEW: Enhanced Alert category selector */}
+          {/* **NEW: Enhanced Alert category selector (ENTRY default, SCREENING secondary) */}
           <div className="mb-8">
             <div className="inline-flex bg-gray-800 rounded-xl p-1 shadow-lg border border-gray-700">
               <button
-                onClick={() => handleCategoryChange('ALL')}
-                className={
-                  alertCategory === 'ALL'
-                    ? 'px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-gray-300 bg-transparent'
-                }
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  <span>All Alerts</span>
-                </div>
-              </button>
-              <button
-                onClick={() => handleCategoryChange('ENTRY')}
+                onClick={() => setAlertCategory('ENTRY')}
                 className={
                   alertCategory === 'ENTRY'
                     ? 'px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-lg'
@@ -367,7 +369,7 @@ const AlertsPage = ({ setCurrentPage }) => {
                 </div>
               </button>
               <button
-                onClick={() => handleCategoryChange('SCREENING')}
+                onClick={() => setAlertCategory('SCREENING')}
                 className={
                   alertCategory === 'SCREENING'
                     ? 'px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg'
@@ -378,7 +380,7 @@ const AlertsPage = ({ setCurrentPage }) => {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  <span>Screening Results</span>
+                  <span>Screened Picks</span>
                 </div>
               </button>
             </div>
@@ -542,16 +544,140 @@ const AlertsPage = ({ setCurrentPage }) => {
           
           {!loading && !error && (
             <div>
-              {alerts.length > 0 ? (
+              {alertCategory === 'ENTRY' ? (
+                filteredEntryAlerts.length > 0 ? (
+                  <div className="space-y-6">
+                    {filteredEntryAlerts.map((alert, index) => {
+                      // Check if this entry alert was a premarket pick
+                      const wasPremarketPick = screenerStocks.some(s => s.instrument_key === alert.instrument_key);
+                      return (
+                        <div key={alert.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <AlertCard 
+                            alert={alert}
+                            onPlan={handleOpenPlanModal}
+                            hasPlan={plannedStockKeys.has(alert.instrument_key)}
+                            livePrice={livePrices[alert.instrument_key]}
+                          />
+                          {wasPremarketPick && (
+                            <span className="inline-block mt-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-semibold shadow">Premarket Pick</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-20">
+                    <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
+                      <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <p className="text-gray-400 font-semibold mb-2">No active entry alerts</p>
+                      <p className="text-gray-500 text-sm">Expired alerts are hidden automatically. Check back for new actionable signals.</p>
+                    </div>
+                  </div>
+                )
+              ) : (
+                alerts.length > 0 ? (
+                  <div className="space-y-6">
+                    {alerts.map((alert, index) => {
+                      // Check if this entry alert was a premarket pick
+                      const wasPremarketPick = screenerStocks.some(s => s.instrument_key === alert.instrument_key);
+                      return (
+                        <div key={alert.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                          <AlertCard 
+                            alert={alert}
+                            onPlan={handleOpenPlanModal}
+                            hasPlan={plannedStockKeys.has(alert.instrument_key)}
+                            livePrice={livePrices[alert.instrument_key]}
+                          />
+                          {wasPremarketPick && (
+                            <span className="inline-block mt-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-semibold shadow">Premarket Pick</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-20">
+                    <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
+                      <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <p className="text-gray-400 font-semibold mb-2">No {alertCategory.toLowerCase()} alerts found</p>
+                      {alertCategory === 'SCREENING' && (
+                        <p className="text-gray-500 text-sm">
+                          Screening results are generated at market open (9:00 AM IST).
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Screening Results Tab */}
+          {alertCategory === 'SCREENING' && !loading && !error && (
+            <div>
+              {/* Stats and filter */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <div className="flex gap-4 text-lg font-semibold text-white">
+                  <span>Screened: <span className="text-blue-400">{screeningStats.total}</span></span>
+                  <span>Entry Triggered: <span className="text-purple-400">{screeningStats.triggered}</span></span>
+                  <span>Waiting: <span className="text-green-400">{screeningStats.waiting}</span></span>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setScreenerFilter('ALL')} className={`px-3 py-1 rounded ${screenerFilter==='ALL' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}>All</button>
+                  <button onClick={() => setScreenerFilter('WAITING')} className={`px-3 py-1 rounded ${screenerFilter==='WAITING' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Waiting</button>
+                  <button onClick={() => setScreenerFilter('TRIGGERED')} className={`px-3 py-1 rounded ${screenerFilter==='TRIGGERED' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Triggered</button>
+                </div>
+              </div>
+              {filteredScreenerStocks.length > 0 ? (
                 <div className="space-y-6">
-                  {alerts.map((alert, index) => (
-                    <div key={alert.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                      <AlertCard 
-                        alert={alert}
-                        onPlan={handleOpenPlanModal}
-                        hasPlan={plannedStockKeys.has(alert.instrument_key)}
-                        livePrice={livePrices[alert.instrument_key]}
-                      />
+                  {filteredScreenerStocks.map((stock, index) => (
+                    <div key={stock.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <div className="glass p-6 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-2xl font-bold text-white">{stock.tradingsymbol}</span>
+                            <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 font-mono">{stock.instrument_key}</span>
+                          </div>
+                          <div className="text-sm text-gray-400 mb-1">Strategy: <span className="font-semibold text-green-400">{stock.source_strategy.replace('_', ' ')}</span></div>
+                          <div className="text-sm text-gray-400 mb-1">Score: <span className="font-semibold text-blue-400">{stock.alert_details?.score ?? '-'}</span></div>
+                          <div className="text-sm text-gray-400 mb-1">Reasons:
+                            <ul className="list-disc ml-6">
+                              {(stock.alert_details?.reasons || []).map((reason, i) => (
+                                <li key={i}>{reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {/* Status badge */}
+                          {stock.entry_status === 'triggered' ? (
+                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-sm mb-1">Entry Triggered</span>
+                          ) : (
+                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-sm mb-1">Waiting</span>
+                          )}
+                          {/* View Entry Alert button */}
+                          {stock.entry_status === 'triggered' && stock.entry_alert && (
+                            <button
+                              onClick={() => handleViewEntryAlert(stock.instrument_key)}
+                              className="px-3 py-1 rounded bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 transition"
+                              title="View Entry Alert"
+                            >
+                              View Entry Alert
+                            </button>
+                          )}
+                          {/* Plan button */}
+                          <button
+                            className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-semibold text-sm shadow hover:from-yellow-600 hover:to-orange-600"
+                            onClick={() => handleOpenPlanModal(stock)}
+                          >
+                            Create Trade Plan
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -561,18 +687,113 @@ const AlertsPage = ({ setCurrentPage }) => {
                     <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                    <p className="text-gray-400 font-semibold mb-2">No {alertCategory.toLowerCase()} alerts found</p>
-                    {alertCategory === 'ENTRY' && (
-                      <p className="text-gray-500 text-sm">
-                        Check back during market hours (9:15 AM - 3:30 PM IST) for real-time ORB alerts.
-                      </p>
-                    )}
-                    {alertCategory === 'SCREENING' && (
-                      <p className="text-gray-500 text-sm">
-                        Screening results are generated at market open (9:00 AM IST).
-                      </p>
-                    )}
+                    <p className="text-gray-400 font-semibold mb-2">No screening results found</p>
+                    <p className="text-gray-500 text-sm">Screening results are generated at market open (9:00 AM IST).</p>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Entry Alerts Tab */}
+          {alertCategory === 'ENTRY' && !loading && !error && (
+            <div>
+              {filteredEntryAlerts.length > 0 ? (
+                <div className="space-y-6">
+                  {filteredEntryAlerts.map((alert, index) => {
+                    // Check if this entry alert was a premarket pick
+                    const wasPremarketPick = screenerStocks.some(s => s.instrument_key === alert.instrument_key);
+                    return (
+                      <div
+                        key={alert.id}
+                        ref={el => entryAlertRefs.current[alert.instrument_key] = el}
+                        className={`animate-slide-in ${highlightedEntryId === alert.instrument_key ? 'ring-4 ring-blue-400 transition' : ''}`}
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <div className="glass p-6 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl font-bold text-white">{alert.tradingsymbol}</span>
+                              <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 font-mono">{alert.instrument_key}</span>
+                            </div>
+                            <div className="text-sm text-gray-400 mb-1">Entry Alert <span className="font-semibold text-blue-400">(Premarket Pick)</span></div>
+                            <div className="text-sm text-gray-400 mb-1">Entry: <span className="font-semibold text-green-400">₹{alert.indicators?.Entry_Price ?? '-'}</span> | Stop: <span className="font-semibold text-red-400">₹{alert.indicators?.Stop_Loss ?? '-'}</span> | Target: <span className="font-semibold text-yellow-400">₹{alert.indicators?.Target ?? '-'}</span></div>
+                            <div className="text-sm text-gray-400 mb-1">Screened Reason:
+                              <ul className="list-disc ml-6">
+                                {(alert.alert_details?.reasons || []).map((reason, i) => (
+                                  <li key={i}>{reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold text-sm mb-1">Active</span>
+                            <button
+                              className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-semibold text-sm shadow hover:from-yellow-600 hover:to-orange-600"
+                              onClick={() => handleOpenPlanModal(alert)}
+                            >
+                              Create Trade Plan
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
+                    <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <p className="text-gray-400 font-semibold mb-2">No active entry alerts</p>
+                    <p className="text-gray-500 text-sm">Expired alerts are hidden automatically. Check back for new actionable signals.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Expired Alerts Section */}
+              {expiredEntryAlerts.length > 0 && (
+                <div className="mt-10">
+                  <button
+                    className="w-full flex items-center justify-between px-6 py-3 rounded-lg bg-gradient-to-r from-gray-700 to-gray-800 text-white font-semibold shadow hover:from-gray-600 hover:to-gray-700 focus:outline-none"
+                    onClick={() => setShowExpired(v => !v)}
+                    aria-expanded={showExpired}
+                  >
+                    <span>Show Expired Alerts ({expiredEntryAlerts.length})</span>
+                    <svg className={`w-5 h-5 transform transition-transform ${showExpired ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showExpired && (
+                    <div className="space-y-6 mt-4 animate-fade-in">
+                      {expiredEntryAlerts.map((alert, index) => (
+                        <div key={alert.id} className="opacity-60">
+                          {/* Reuse the same card design, but faded */}
+                          <div className="glass p-6 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="text-2xl font-bold text-white">{alert.tradingsymbol}</span>
+                                <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 font-mono">{alert.instrument_key}</span>
+                              </div>
+                              <div className="text-sm text-gray-400 mb-1">Entry Alert <span className="font-semibold text-blue-400">(Expired)</span></div>
+                              <div className="text-sm text-gray-400 mb-1">Entry: <span className="font-semibold text-green-400">₹{alert.indicators?.Entry_Price ?? '-'}</span> | Stop: <span className="font-semibold text-red-400">₹{alert.indicators?.Stop_Loss ?? '-'}</span> | Target: <span className="font-semibold text-yellow-400">₹{alert.indicators?.Target ?? '-'}</span></div>
+                              <div className="text-sm text-gray-400 mb-1">Screened Reason:
+                                <ul className="list-disc ml-6">
+                                  {(alert.alert_details?.reasons || []).map((reason, i) => (
+                                    <li key={i}>{reason}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <span className="px-4 py-2 rounded-full bg-gradient-to-r from-gray-500 to-gray-700 text-white font-semibold text-sm mb-1">Expired</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

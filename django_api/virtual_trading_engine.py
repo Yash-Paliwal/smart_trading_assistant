@@ -11,6 +11,8 @@ import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 import time
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smart_trading_assistant_api.settings')
@@ -29,6 +31,39 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def notify_virtual_trade_update(user, trade, wallet=None):
+    """Send WebSocket events for trade update, wallet, and open trades."""
+    channel_layer = get_channel_layer()
+    group_name = f"trading_{user.username}"
+    from trading_app.serializers import VirtualTradeSerializer
+    trade_data = VirtualTradeSerializer(trade).data
+    # Send trade update
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {"type": "trade_update", "data": trade_data}
+    )
+    # Optionally send wallet data
+    if wallet:
+        wallet_data = {
+            'balance': float(wallet.balance),
+            'total_pnl': float(wallet.total_pnl),
+            'total_trades': wallet.total_trades,
+            'win_rate': float(wallet.win_rate),
+            'total_value': float(wallet.total_value),
+        }
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {"type": "wallet_data", "data": wallet_data}
+        )
+    # Send open trades
+    open_trades = VirtualTrade.objects.filter(wallet=wallet, status='EXECUTED')
+    from trading_app.serializers import VirtualTradeSerializer
+    open_trades_data = [VirtualTradeSerializer(t).data for t in open_trades]
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {"type": "open_trades", "data": open_trades_data}
+    )
 
 class VirtualTradingEngine:
     """
@@ -226,6 +261,9 @@ class VirtualTradingEngine:
             logger.info(f"   Target: ₹{target_price:,.2f} | Stop Loss: ₹{stop_loss:,.2f}")
             logger.info(f"   Trade Value: ₹{trade_value:,.2f}")
             
+            # --- WebSocket notification ---
+            notify_virtual_trade_update(self.user, virtual_trade, self.wallet)
+            
             return virtual_trade
             
         except Exception as e:
@@ -322,6 +360,9 @@ class VirtualTradingEngine:
             logger.info(f"🔒 Closed position: {position.tradingsymbol}")
             logger.info(f"   P&L: ₹{pnl:,.2f} ({trade.pnl_percentage:.2f}%)")
             logger.info(f"   Reason: {reason}")
+            
+            # --- WebSocket notification ---
+            notify_virtual_trade_update(self.user, trade, self.wallet)
             
         except Exception as e:
             logger.error(f"Error closing position {position.instrument_key}: {e}")

@@ -12,6 +12,7 @@ import LoginCallback from './pages/LoginCallback';
 import { getCurrentUser, logout } from './api/apiService';
 import './App.css';
 import './index.css';
+import { ToastProvider } from './components/ToastProvider';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('alerts');
@@ -96,17 +97,19 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <Navbar 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage}
-        user={currentUser}
-        onLogout={handleLogout}
-      />
-      <main>
-        {renderPage()}
-      </main>
-    </div>
+    <ToastProvider>
+      <div className="App">
+        <Navbar 
+          currentPage={currentPage} 
+          setCurrentPage={setCurrentPage}
+          user={currentUser}
+          onLogout={handleLogout}
+        />
+        <main>
+          {renderPage()}
+        </main>
+      </div>
+    </ToastProvider>
   );
 }
 

@@ -39,7 +39,7 @@ apiClient.interceptors.request.use(config => {
  * Fetches the data for the currently logged-in user.
  */
 export const getCurrentUser = () => {
-  return apiClient.get(`/auth/user/`);
+  return apiClient.get(`/api/auth/user/`);
 };
 
 /**
@@ -56,14 +56,14 @@ export const logout = () => {
  * Fetches the list of all radar alerts.
  */
 export const getAlerts = () => {
-  return apiClient.get(`/alerts/`);
+  return apiClient.get(`/api/alerts/`);
 };
 
 /**
  * Fetches the list of all existing trade logs (trade plans).
  */
 export const getTradeLogs = () => {
-  return apiClient.get(`/tradelogs/`);
+  return apiClient.get(`/api/tradelogs/`);
 };
 
 /**
@@ -71,7 +71,7 @@ export const getTradeLogs = () => {
  * @param {object} tradePlan - The trade plan data.
  */
 export const createTradeLog = (tradePlan) => {
-  return apiClient.post(`/tradelogs/`, tradePlan);
+  return apiClient.post(`/api/tradelogs/`, tradePlan);
 };
 
 /**
@@ -80,7 +80,7 @@ export const createTradeLog = (tradePlan) => {
  * @param {object} updateData - The data to update.
  */
 export const updateTradeLog = (id, updateData) => {
-  return apiClient.patch(`/tradelogs/${id}/`, updateData);
+  return apiClient.patch(`/api/tradelogs/${id}/`, updateData);
 };
 
 /**
@@ -88,9 +88,16 @@ export const updateTradeLog = (id, updateData) => {
  * @param {number} id - The ID of the trade log to delete.
  */
 export const deleteTradeLog = (id) => {
-  return apiClient.delete(`/tradelogs/${id}/`);
+  return apiClient.delete(`/api/tradelogs/${id}/`);
 };
 
 export const getVirtualTradingDashboard = async () => {
-  return await apiClient.get('/virtual-trading-dashboard/');
+  return await apiClient.get('/api/virtual-trading-dashboard/');
+};
+
+/**
+ * Fetches the full premarket screener list for today, with entry alert status for each stock.
+ */
+export const getScreenerStatus = () => {
+  return apiClient.get(`/screener-status/`);
 };
