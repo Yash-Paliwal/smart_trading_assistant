@@ -1,61 +1,100 @@
 // src/components/Navbar.js
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Navbar = ({ currentPage, setCurrentPage, user, onLogout }) => {
-  // A helper function to apply the correct CSS classes for the active link
-  const getNavLinkClasses = (pageName) => 
-    `px-3 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors ${
-      currentPage === pageName 
-      ? 'bg-blue-600 text-white' 
-      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-    }`;
+  const [marketStatus, setMarketStatus] = useState({ isOpen: false, text: '', color: 'gray', time: '' });
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  useEffect(() => {
+    const updateMarketStatus = () => {
+      const now = new Date();
+      const day = now.getDay();
+      const open = new Date(now);
+      open.setHours(9, 15, 0, 0);
+      const close = new Date(now);
+      close.setHours(15, 30, 0, 0);
+      let isOpen = day >= 1 && day <= 5 && now >= open && now <= close;
+      let text = isOpen ? 'Market Open' : 'Market Closed';
+      let color = isOpen ? 'green' : 'red';
+      let time = '';
+      if (!isOpen) {
+        // Show time until next open
+        let nextOpen = new Date(now);
+        if (now > close || day === 6) {
+          // After close or Saturday, next open is next weekday
+          nextOpen.setDate(now.getDate() + ((8 - day) % 7 || 1));
+        }
+        nextOpen.setHours(9, 15, 0, 0);
+        const diff = nextOpen - now;
+        if (diff > 0) {
+          const hours = Math.floor(diff / 1000 / 60 / 60);
+          const mins = Math.floor((diff / 1000 / 60) % 60);
+          time = `Opens in ${hours}h ${mins}m`;
+        }
+      } else {
+        // Show time until close
+        const diff = close - now;
+        const hours = Math.floor(diff / 1000 / 60 / 60);
+        const mins = Math.floor((diff / 1000 / 60) % 60);
+        time = `Closes in ${hours}h ${mins}m`;
+      }
+      setMarketStatus({ isOpen, text, color, time });
+    };
+    updateMarketStatus();
+    const interval = setInterval(updateMarketStatus, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const navLinks = [
+    { key: 'live-dashboard', label: 'Dashboard' },
+    { key: 'alerts', label: 'Alerts' },
+    { key: 'plans', label: 'Trade Plans' },
+    { key: 'journal', label: 'Journal' },
+  ];
 
   return (
-    <nav className="bg-gray-800 shadow-lg sticky top-0 z-40">
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <span className="text-white font-bold text-xl">Smart Trader</span>
-            </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
-                <a onClick={() => setCurrentPage('alerts')} className={getNavLinkClasses('alerts')}>
-                  Radar Alerts
-                </a>
-                <a onClick={() => setCurrentPage('plans')} className={getNavLinkClasses('plans')}>
-                  Trade Plans
-                </a>
-                <a onClick={() => setCurrentPage('journal')} className={getNavLinkClasses('journal')}>
-                  Trade Journal
-                </a>
-              </div>
-            </div>
+    <nav className="glass-navbar">
+      <div className="navbar-container">
+        {/* Brand */}
+        <div className="navbar-brand gradient-text">SmartTrader</div>
+
+        {/* Hamburger for mobile */}
+        <button className="mobile-menu-btn" onClick={() => setShowMobileMenu(!showMobileMenu)}>
+          <span className="hamburger" />
+        </button>
+
+        {/* Nav Links */}
+        <div className={`navbar-links${showMobileMenu ? ' show' : ''}`}>
+          {navLinks.map(link => (
+            <button
+              key={link.key}
+              className={`btn nav-btn${currentPage === link.key ? ' active' : ''}`}
+              onClick={() => {
+                setCurrentPage(link.key);
+                setShowMobileMenu(false);
+              }}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        {/* User/Market Status */}
+        <div className="navbar-user-info">
+          <div className="market-status">
+            <span className={`market-dot ${marketStatus.color}`} />
+            <span className="market-text">{marketStatus.text}</span>
+            {marketStatus.time && <span className="market-time">{marketStatus.time}</span>}
           </div>
-          <div className="flex items-center">
-            {/* --- DYNAMIC LOGIN/LOGOUT UI --- */}
-            {user ? (
-              // If a user is logged in, show their name and a Logout button
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-300 text-sm">Welcome, {user.first_name || user.username}</span>
-                <button 
-                  onClick={onLogout}
-                  className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              // If no user is logged in, show the Login button
-              <a 
-                href="/api/auth/upstox/login/" 
-                className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Login with Upstox
-              </a>
-            )}
-          </div>
+          {user ? (
+            <div className="user-info">
+              <span className="user-name">{user.first_name || user.username}</span>
+              <button className="btn logout-btn" onClick={onLogout}>Logout</button>
+            </div>
+          ) : (
+            <button className="btn login-btn" onClick={() => setCurrentPage('login')}>Login</button>
+          )}
         </div>
       </div>
     </nav>

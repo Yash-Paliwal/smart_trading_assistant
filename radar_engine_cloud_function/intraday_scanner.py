@@ -42,44 +42,79 @@ def get_watchlist():
 
 def analyze_stock_for_orb(instrument_key):
     """
-    Analyzes a single stock for an Opening Range Breakout.
+    Enhanced Opening Range Breakout analysis with multiple entry strategies.
     """
     df = upstox_client_wrapper.fetch_intraday_data(instrument_key, interval='5')
 
-    if df is None or len(df) < 6: # Need at least 6 5-min candles for a 30-min range
+    if df is None or len(df) < 12: # Need at least 12 5-min candles for 1 hour analysis
         return
 
-    # 1. Define the opening range (first 30 minutes, which is the first 6 5-min candles)
+    # 1. Define the opening range (first 30 minutes = 6 candles)
     opening_range_df = df.head(6)
     opening_range_high = opening_range_df['high'].max()
     opening_range_low = opening_range_df['low'].min()
     
     # 2. Get the most recent candle
     last_candle = df.iloc[-1]
+    current_price = last_candle['close']
+    current_volume = last_candle['volume']
+    avg_volume = df['volume'].tail(6).mean()
     
-    # 3. Check for a breakout
-    # A breakout occurs if the last candle's close is above the opening range high.
-    if last_candle['close'] > opening_range_high:
-        print(f"\n[BREAKOUT DETECTED] for {instrument_key}!")
+    # 3. Enhanced breakout detection with volume confirmation
+    breakout_up = current_price > opening_range_high
+    breakout_down = current_price < opening_range_low
+    volume_confirmation = current_volume > avg_volume * 1.2
+    
+    if breakout_up or breakout_down:
+        direction = "UP" if breakout_up else "DOWN"
+        breakout_level = opening_range_high if breakout_up else opening_range_low
         
-        # 4. Create and save the alert
+        # Calculate targets and stop loss
+        if breakout_up:
+            stop_loss = opening_range_low
+            target = current_price + (current_price - opening_range_low)
+        else:
+            stop_loss = opening_range_high
+            target = current_price - (opening_range_high - current_price)
+        
+        # Calculate risk-reward ratio
+        risk = abs(current_price - stop_loss)
+        reward = abs(target - current_price)
+        rr_ratio = reward / risk if risk > 0 else 0
+        
+        print(f"\n🎯 [ENHANCED ORB DETECTED] for {instrument_key}!")
+        print(f"   Direction: {direction}")
+        print(f"   Entry: ₹{current_price:.2f}")
+        print(f"   Stop Loss: ₹{stop_loss:.2f}")
+        print(f"   Target: ₹{target:.2f}")
+        print(f"   Risk-Reward: 1:{rr_ratio:.2f}")
+        print(f"   Volume: {'✅ Confirmed' if volume_confirmation else '❌ Weak'}")
+        
+        # 4. Create enhanced alert
         reasons = [
-            f"Price broke above the {OPENING_RANGE_MINUTES}-min opening range high of {opening_range_high:.2f}.",
-            f"Current Price: {last_candle['close']:.2f}"
+            f"Enhanced ORB: Price broke {direction} the {OPENING_RANGE_MINUTES}-min opening range",
+            f"Entry: ₹{current_price:.2f}, Stop: ₹{stop_loss:.2f}, Target: ₹{target:.2f}",
+            f"Risk-Reward: 1:{rr_ratio:.2f}",
+            f"Volume: {'High' if volume_confirmation else 'Normal'}"
         ]
         
         alert_data = {
             "instrument_key": instrument_key,
-            "score": 1, # Intraday alerts can have their own scoring system
+            "score": 2 if volume_confirmation else 1,
             "reasons": reasons,
-            "indicators": { # We can add relevant intraday indicators here later
+            "indicators": {
                 "ORB_High": opening_range_high,
                 "ORB_Low": opening_range_low,
-                "Last_Close": last_candle['close']
+                "Entry_Price": current_price,
+                "Stop_Loss": stop_loss,
+                "Target": target,
+                "Risk_Reward": rr_ratio,
+                "Volume_Confirmation": volume_confirmation,
+                "Direction": direction
             }
         }
         
-        # Use the existing save function, but just for this one alert
+        # Save enhanced alert
         trade_analyzer.save_alerts_to_db([alert_data], STRATEGY_NAME)
 
 def main():
@@ -88,22 +123,26 @@ def main():
     """
     print(f"\n--- Running Intraday Scanner: {STRATEGY_NAME} ---")
 
-    # 🛑 Exit if it's Saturday or Sunday
+    # Check if it's a weekday
     today = datetime.now().weekday()  # Monday=0, Sunday=6
     if today >= 5:
         print("Market is closed today (Weekend). Exiting.")
         return
-
-    # 🧪 Diagnostic check: print current time in IST
-    now = pd.Timestamp.now(tz='Asia/Kolkata')
-    print(f"Current IST Time: {now.time()}")
-
-    market_open_time = pd.Timestamp(f"{now.date()} 09:15:00", tz='Asia/Kolkata')
-    if now < market_open_time + pd.Timedelta(minutes=5):
-        print(f"Market not open yet or opening range incomplete. Exiting.")
+    
+    # Check market hours (9:15 AM to 3:30 PM IST)
+    import pytz
+    ist = pytz.timezone('Asia/Kolkata')
+    now = datetime.now(ist)
+    current_time = now.strftime("%H:%M")
+    
+    if not ("09:15" <= current_time <= "15:30"):
+        print(f"Market is closed. Current time: {current_time}")
         return
 
-    # ✅ Continue only if market is open
+    print(f"Current IST Time: {now.time()}")
+    print("Market is open. Starting intraday scan...")
+
+    # Get watchlist and scan
     watchlist = get_watchlist()
     if not watchlist:
         print("No stocks in the watchlist to scan. Exiting.")

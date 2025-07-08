@@ -5,8 +5,12 @@ import Navbar from './components/Navbar';
 import AlertsPage from './pages/AlertsPage';
 import TradePlansPage from './pages/TradePlansPage';
 import TradeJournalPage from './pages/TradeJournalPage';
-import LoginCallback from './pages/LoginCallback'; // ✅ NEW: For handling login
+import VirtualTradingPage from './pages/VirtualTradingPage';
+import LiveTradingDashboard from './components/LiveTradingDashboard';
+
+import LoginCallback from './pages/LoginCallback';
 import { getCurrentUser, logout } from './api/apiService';
+import './App.css';
 import './index.css';
 
 function App() {
@@ -14,14 +18,20 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // ✅ Check if user already has a session
+  // Check if user already has a session
   useEffect(() => {
     const checkCurrentUser = async () => {
       try {
         const response = await getCurrentUser();
-        setCurrentUser(response.data);
+        if (response.data && response.data.username) {
+          setCurrentUser(response.data);
+          console.log("User session found:", response.data.username);
+        } else {
+          setCurrentUser(null);
+          console.log("No valid user session found.");
+        }
       } catch (error) {
-        console.log("No active user session found.");
+        console.log("No active user session found:", error.message);
         setCurrentUser(null);
       } finally {
         setAuthLoading(false);
@@ -30,13 +40,14 @@ function App() {
     checkCurrentUser();
   }, []);
 
-  // ✅ Detect Upstox callback and route to LoginCallback page
+  // Detect Upstox callback and route to LoginCallback page
   useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
+    // eslint-disable-next-line no-unused-vars
     const state = url.searchParams.get("state");
 
-    if (code && window.location.pathname.includes("/login/callback")) {
+    if (code) {
       setCurrentPage("loginCallback");
     }
   }, []);
@@ -51,7 +62,7 @@ function App() {
     }
   };
 
-  // ✅ Include LoginCallback as a page
+  // Include LoginCallback as a page
   const renderPage = () => {
     switch (currentPage) {
       case 'alerts':
@@ -60,6 +71,12 @@ function App() {
         return <TradePlansPage />;
       case 'journal':
         return <TradeJournalPage />;
+      case 'virtual-trading':
+        return <VirtualTradingPage />;
+      case 'live-dashboard':
+        return <LiveTradingDashboard userId={currentUser?.username} />;
+      
+      
       case 'loginCallback':
         return <LoginCallback setUser={setCurrentUser} setCurrentPage={setCurrentPage} />;
       default:
@@ -69,24 +86,26 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex justify-center items-center">
-        <p className="text-white">Loading...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans">
+    <div className="App">
       <Navbar 
         currentPage={currentPage} 
         setCurrentPage={setCurrentPage}
         user={currentUser}
         onLogout={handleLogout}
       />
-      
-      <div className="container mx-auto">
+      <main>
         {renderPage()}
-      </div>
+      </main>
     </div>
   );
 }

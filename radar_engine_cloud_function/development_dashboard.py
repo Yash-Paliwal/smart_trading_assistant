@@ -323,9 +323,9 @@ class DevelopmentDashboard:
             indicators = indicator_calculator.calculate_indicators(current_data)
             
             # Check for trade setups
-            setup_found, details = trade_analyzer.analyze_for_trade_setup(
-                symbol, indicators, current_data
-            )
+                    setup_found, details, trade_recommendations = trade_analyzer.analyze_for_trade_setup(
+            symbol, indicators, current_data
+        )
             
             # Update UI in main thread
             self.root.after(0, self.update_simulation_display, symbol, indicators, setup_found, details)

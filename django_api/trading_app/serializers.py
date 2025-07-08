@@ -2,28 +2,49 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import RadarAlert, TradeLog, Instrument
+from .models import Instrument, TradeLog, RadarAlert, VirtualWallet, VirtualTrade, VirtualPosition
 
-# **NEW SERIALIZER:** This will format the built-in Django User model data into JSON.
+class InstrumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Instrument
+        fields = '__all__'
+
+class TradeLogSerializer(serializers.ModelSerializer):
+    instrument_symbol = serializers.CharField(source='instrument.tradingsymbol', read_only=True)
+    
+    class Meta:
+        model = TradeLog
+        fields = '__all__'
+
+class RadarAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RadarAlert
+        fields = '__all__'
+
+# Virtual Trading Serializers
+class VirtualWalletSerializer(serializers.ModelSerializer):
+    available_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    win_rate = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+    total_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    
+    class Meta:
+        model = VirtualWallet
+        fields = '__all__'
+
+class VirtualTradeSerializer(serializers.ModelSerializer):
+    is_profitable = serializers.BooleanField(read_only=True)
+    current_value = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    
+    class Meta:
+        model = VirtualTrade
+        fields = '__all__'
+
+class VirtualPositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VirtualPosition
+        fields = '__all__'
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name']
-
-
-class RadarAlertSerializer(serializers.ModelSerializer):
-    tradingsymbol = serializers.CharField(read_only=True)
-    class Meta:
-        model = RadarAlert
-        fields = ['id', 'instrument_key', 'tradingsymbol', 'source_strategy', 'alert_details', 'indicators', 'timestamp']
-
-
-class TradeLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TradeLog
-        fields = [
-            'id', 'instrument_key', 'status', 'planned_entry_price', 
-            'stop_loss_price', 'target_price', 'actual_entry_price', 
-            'exit_price', 'pnl', 'notes', 'trade_date'
-        ]
-        read_only_fields = ['trade_date']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']

@@ -90,3 +90,7 @@ export const updateTradeLog = (id, updateData) => {
 export const deleteTradeLog = (id) => {
   return apiClient.delete(`/tradelogs/${id}/`);
 };
+
+export const getVirtualTradingDashboard = async () => {
+  return await apiClient.get('/virtual-trading-dashboard/');
+};
