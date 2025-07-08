@@ -1,10 +1,12 @@
 // src/components/Navbar.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const Navbar = ({ currentPage, setCurrentPage, user, onLogout }) => {
   const [marketStatus, setMarketStatus] = useState({ isOpen: false, text: '', color: 'gray', time: '' });
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const updateMarketStatus = () => {
@@ -46,54 +48,95 @@ const Navbar = ({ currentPage, setCurrentPage, user, onLogout }) => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    }
+    if (showProfileDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileDropdown]);
+
   const navLinks = [
-    { key: 'live-dashboard', label: 'Dashboard' },
     { key: 'alerts', label: 'Alerts' },
+    { key: 'virtual-trading', label: 'Virtual Trading' },
     { key: 'plans', label: 'Trade Plans' },
     { key: 'journal', label: 'Journal' },
   ];
 
   return (
-    <nav className="glass-navbar">
-      <div className="navbar-container">
-        {/* Brand */}
-        <div className="navbar-brand gradient-text">SmartTrader</div>
-
-        {/* Hamburger for mobile */}
-        <button className="mobile-menu-btn" onClick={() => setShowMobileMenu(!showMobileMenu)}>
-          <span className="hamburger" />
-        </button>
-
-        {/* Nav Links */}
-        <div className={`navbar-links${showMobileMenu ? ' show' : ''}`}>
+    <nav className="glass-navbar" style={{ whiteSpace: 'nowrap' }}>
+      <div className="navbar-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'nowrap' }}>
+        <div className="navbar-brand gradient-text" style={{marginLeft: '2.5rem', marginRight: '2.5rem', whiteSpace: 'nowrap' }}>SmartTrader</div>
+        <div className="navbar-links" style={{ gap: '2.2rem', display: 'flex', alignItems: 'center', flexShrink: 1, whiteSpace: 'nowrap' }}>
           {navLinks.map(link => (
             <button
               key={link.key}
               className={`btn nav-btn${currentPage === link.key ? ' active' : ''}`}
-              onClick={() => {
-                setCurrentPage(link.key);
-                setShowMobileMenu(false);
-              }}
+              onClick={() => setCurrentPage(link.key)}
+              style={{ whiteSpace: 'nowrap' }}
             >
               {link.label}
             </button>
           ))}
         </div>
-
-        {/* User/Market Status */}
-        <div className="navbar-user-info">
-          <div className="market-status">
-            <span className={`market-dot ${marketStatus.color}`} />
-            <span className="market-text">{marketStatus.text}</span>
-            {marketStatus.time && <span className="market-time">{marketStatus.time}</span>}
+        <div className="navbar-user-info" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexShrink: 0, minWidth: 0 }}>
+          <div className="navbar-market-status" style={{ marginRight: '1.2rem' }}>
+            <span
+              className="market-status-pill"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '0.35em 1.2em',
+                borderRadius: '999px',
+                fontWeight: 700,
+                fontSize: '1.05em',
+                background: marketStatus.isOpen
+                  ? 'linear-gradient(90deg, #22c55e 0%, #3b82f6 100%)'
+                  : 'linear-gradient(90deg, #ef4444 0%, #f59e42 100%)',
+                color: '#fff',
+                boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
+                whiteSpace: 'nowrap',
+                margin: 0,
+              }}
+            >
+              {marketStatus.isOpen ? (
+                <span style={{ fontSize: '1.2em', marginRight: 8 }}>🟢</span>
+              ) : (
+                <span style={{ fontSize: '1.2em', marginRight: 8 }}>⏳</span>
+              )}
+              {marketStatus.text}
+              <span style={{ fontWeight: 400, marginLeft: 10, fontSize: '0.95em', opacity: 0.85 }}>
+                {marketStatus.time}
+              </span>
+            </span>
           </div>
           {user ? (
-            <div className="user-info">
-              <span className="user-name">{user.first_name || user.username}</span>
-              <button className="btn logout-btn" onClick={onLogout}>Logout</button>
+            <div ref={profileRef} style={{marginRight: '2.5rem', position: 'relative', minWidth: 0 }}>
+              <button
+                className="profile-name-btn"
+                onClick={() => setShowProfileDropdown(v => !v)}
+                aria-haspopup="true"
+                aria-expanded={showProfileDropdown}
+              >
+                {user.first_name || user.username}
+               
+              </button>
+              {showProfileDropdown && (
+                <div className="profile-dropdown" style={{ position: 'absolute', right: 0, top: '110%', background: '#181f2e', borderRadius: 8, boxShadow: '0 4px 16px 0 rgba(30,41,59,0.13)', zIndex: 10, minWidth: 120 }}>
+                  <button className="btn logout-btn" style={{ width: '100%', textAlign: 'left', padding: '0.7em 1.2em', background: 'none', border: 'none', color: '#ef4444', fontWeight: 600, cursor: 'pointer', borderRadius: 8 }} onClick={onLogout}>
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
-            <button className="btn login-btn" onClick={() => setCurrentPage('login')}>Login</button>
+            <button className="btn login-btn" onClick={() => { window.location.href = '/api/auth/upstox/login/'; }}>Login</button>
           )}
         </div>
       </div>
