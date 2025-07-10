@@ -98,17 +98,17 @@ function App() {
 
   return (
     <ToastProvider>
-      <div className="App">
-        <Navbar 
-          currentPage={currentPage} 
-          setCurrentPage={setCurrentPage}
-          user={currentUser}
-          onLogout={handleLogout}
-        />
-        <main>
-          {renderPage()}
-        </main>
-      </div>
+    <div className="App">
+      <Navbar 
+        currentPage={currentPage} 
+        setCurrentPage={setCurrentPage}
+        user={currentUser}
+        onLogout={handleLogout}
+      />
+      <main>
+        {renderPage()}
+      </main>
+    </div>
     </ToastProvider>
   );
 }

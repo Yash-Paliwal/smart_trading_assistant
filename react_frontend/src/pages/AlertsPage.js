@@ -275,8 +275,34 @@ const AlertsPage = ({ setCurrentPage }) => {
   };
   const screeningStats = getScreeningStats();
 
-  // Filtered screening stocks
-  const filteredScreenerStocks = screenerStocks.filter(stock => {
+  // Filter for entry alerts (all non-SCREENING alert types)
+  const entryAlerts = alerts.filter(alert => alert.alert_type !== 'SCREENING');
+  // Filter for screening alerts (only SCREENING alert type)
+  const screeningAlerts = alerts.filter(alert => alert.alert_type === 'SCREENING');
+
+  // Filter out expired entry alerts for the ENTRY tab (strict: only show non-expired in main list)
+  const filteredEntryAlerts = entryAlerts.filter(alert => {
+    // Only show if NOT expired
+    if (alert.status === 'EXPIRED') return false;
+    if (typeof alert.remaining_minutes === 'number' && alert.remaining_minutes <= 0) return false;
+    return true;
+  });
+
+  // Debug log for entry alerts being rendered
+  if (typeof window !== 'undefined' && window.console) {
+    console.log('Entry Alerts Rendered:', filteredEntryAlerts.map(a => [a.instrument_key, a.alert_type, a.id]));
+  }
+
+  // Collect expired entry alerts for collapsible section (strict: only expired)
+  const expiredEntryAlerts = entryAlerts.filter(alert => {
+    // Only show if expired
+    if (alert.status === 'EXPIRED') return true;
+    if (typeof alert.remaining_minutes === 'number' && alert.remaining_minutes <= 0) return true;
+    return false;
+  });
+
+  // Filtered screening stocks for SCREENING tab
+  const filteredScreenerStocks = screeningAlerts.filter(stock => {
     if (screenerFilter === 'ALL') return true;
     if (screenerFilter === 'WAITING') return stock.entry_status !== 'triggered';
     if (screenerFilter === 'TRIGGERED') return stock.entry_status === 'triggered';
@@ -295,24 +321,6 @@ const AlertsPage = ({ setCurrentPage }) => {
     }, 100);
     setAlertCategory('ENTRY');
   };
-
-  // Filter out expired entry alerts for the ENTRY tab (strict: only show non-expired in main list)
-  const filteredEntryAlerts = alerts.filter(alert => {
-    if (alertCategory !== 'ENTRY') return true;
-    // Only show if NOT expired
-    if (alert.status === 'EXPIRED') return false;
-    if (typeof alert.remaining_minutes === 'number' && alert.remaining_minutes <= 0) return false;
-    return true;
-  });
-
-  // Collect expired entry alerts for collapsible section (strict: only expired)
-  const expiredEntryAlerts = alerts.filter(alert => {
-    if (alertCategory !== 'ENTRY') return false;
-    // Only show if expired
-    if (alert.status === 'EXPIRED') return true;
-    if (typeof alert.remaining_minutes === 'number' && alert.remaining_minutes <= 0) return true;
-    return false;
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -542,200 +550,24 @@ const AlertsPage = ({ setCurrentPage }) => {
             </div>
           )}
           
-          {!loading && !error && (
-            <div>
-              {alertCategory === 'ENTRY' ? (
-                filteredEntryAlerts.length > 0 ? (
-                  <div className="space-y-6">
-                    {filteredEntryAlerts.map((alert, index) => {
-                      // Check if this entry alert was a premarket pick
-                      const wasPremarketPick = screenerStocks.some(s => s.instrument_key === alert.instrument_key);
-                      return (
-                        <div key={alert.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                          <AlertCard 
-                            alert={alert}
-                            onPlan={handleOpenPlanModal}
-                            hasPlan={plannedStockKeys.has(alert.instrument_key)}
-                            livePrice={livePrices[alert.instrument_key]}
-                          />
-                          {wasPremarketPick && (
-                            <span className="inline-block mt-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-semibold shadow">Premarket Pick</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
-                      <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      <p className="text-gray-400 font-semibold mb-2">No active entry alerts</p>
-                      <p className="text-gray-500 text-sm">Expired alerts are hidden automatically. Check back for new actionable signals.</p>
-                    </div>
-                  </div>
-                )
-              ) : (
-                alerts.length > 0 ? (
-                  <div className="space-y-6">
-                    {alerts.map((alert, index) => {
-                      // Check if this entry alert was a premarket pick
-                      const wasPremarketPick = screenerStocks.some(s => s.instrument_key === alert.instrument_key);
-                      return (
-                        <div key={alert.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                          <AlertCard 
-                            alert={alert}
-                            onPlan={handleOpenPlanModal}
-                            hasPlan={plannedStockKeys.has(alert.instrument_key)}
-                            livePrice={livePrices[alert.instrument_key]}
-                          />
-                          {wasPremarketPick && (
-                            <span className="inline-block mt-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-semibold shadow">Premarket Pick</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
-                      <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      <p className="text-gray-400 font-semibold mb-2">No {alertCategory.toLowerCase()} alerts found</p>
-                      {alertCategory === 'SCREENING' && (
-                        <p className="text-gray-500 text-sm">
-                          Screening results are generated at market open (9:00 AM IST).
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-
-          {/* Screening Results Tab */}
-          {alertCategory === 'SCREENING' && !loading && !error && (
-            <div>
-              {/* Stats and filter */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div className="flex gap-4 text-lg font-semibold text-white">
-                  <span>Screened: <span className="text-blue-400">{screeningStats.total}</span></span>
-                  <span>Entry Triggered: <span className="text-purple-400">{screeningStats.triggered}</span></span>
-                  <span>Waiting: <span className="text-green-400">{screeningStats.waiting}</span></span>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setScreenerFilter('ALL')} className={`px-3 py-1 rounded ${screenerFilter==='ALL' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}>All</button>
-                  <button onClick={() => setScreenerFilter('WAITING')} className={`px-3 py-1 rounded ${screenerFilter==='WAITING' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Waiting</button>
-                  <button onClick={() => setScreenerFilter('TRIGGERED')} className={`px-3 py-1 rounded ${screenerFilter==='TRIGGERED' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Triggered</button>
-                </div>
-              </div>
-              {filteredScreenerStocks.length > 0 ? (
-                <div className="space-y-6">
-                  {filteredScreenerStocks.map((stock, index) => (
-                    <div key={stock.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                      <div className="glass p-6 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-2xl font-bold text-white">{stock.tradingsymbol}</span>
-                            <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 font-mono">{stock.instrument_key}</span>
-                          </div>
-                          <div className="text-sm text-gray-400 mb-1">Strategy: <span className="font-semibold text-green-400">{stock.source_strategy.replace('_', ' ')}</span></div>
-                          <div className="text-sm text-gray-400 mb-1">Score: <span className="font-semibold text-blue-400">{stock.alert_details?.score ?? '-'}</span></div>
-                          <div className="text-sm text-gray-400 mb-1">Reasons:
-                            <ul className="list-disc ml-6">
-                              {(stock.alert_details?.reasons || []).map((reason, i) => (
-                                <li key={i}>{reason}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          {/* Status badge */}
-                          {stock.entry_status === 'triggered' ? (
-                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-sm mb-1">Entry Triggered</span>
-                          ) : (
-                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-sm mb-1">Waiting</span>
-                          )}
-                          {/* View Entry Alert button */}
-                          {stock.entry_status === 'triggered' && stock.entry_alert && (
-                            <button
-                              onClick={() => handleViewEntryAlert(stock.instrument_key)}
-                              className="px-3 py-1 rounded bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 transition"
-                              title="View Entry Alert"
-                            >
-                              View Entry Alert
-                            </button>
-                          )}
-                          {/* Plan button */}
-                          <button
-                            className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-semibold text-sm shadow hover:from-yellow-600 hover:to-orange-600"
-                            onClick={() => handleOpenPlanModal(stock)}
-                          >
-                            Create Trade Plan
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-20">
-                  <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
-                    <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <p className="text-gray-400 font-semibold mb-2">No screening results found</p>
-                    <p className="text-gray-500 text-sm">Screening results are generated at market open (9:00 AM IST).</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Entry Alerts Tab */}
+          {/* Keep the second, feature-rich block for ENTRY tab rendering */}
           {alertCategory === 'ENTRY' && !loading && !error && (
             <div>
               {filteredEntryAlerts.length > 0 ? (
                 <div className="space-y-6">
                   {filteredEntryAlerts.map((alert, index) => {
-                    // Check if this entry alert was a premarket pick
                     const wasPremarketPick = screenerStocks.some(s => s.instrument_key === alert.instrument_key);
                     return (
-                      <div
-                        key={alert.id}
-                        ref={el => entryAlertRefs.current[alert.instrument_key] = el}
-                        className={`animate-slide-in ${highlightedEntryId === alert.instrument_key ? 'ring-4 ring-blue-400 transition' : ''}`}
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
-                        <div className="glass p-6 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="text-2xl font-bold text-white">{alert.tradingsymbol}</span>
-                              <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 font-mono">{alert.instrument_key}</span>
-                            </div>
-                            <div className="text-sm text-gray-400 mb-1">Entry Alert <span className="font-semibold text-blue-400">(Premarket Pick)</span></div>
-                            <div className="text-sm text-gray-400 mb-1">Entry: <span className="font-semibold text-green-400">₹{alert.indicators?.Entry_Price ?? '-'}</span> | Stop: <span className="font-semibold text-red-400">₹{alert.indicators?.Stop_Loss ?? '-'}</span> | Target: <span className="font-semibold text-yellow-400">₹{alert.indicators?.Target ?? '-'}</span></div>
-                            <div className="text-sm text-gray-400 mb-1">Screened Reason:
-                              <ul className="list-disc ml-6">
-                                {(alert.alert_details?.reasons || []).map((reason, i) => (
-                                  <li key={i}>{reason}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold text-sm mb-1">Active</span>
-                            <button
-                              className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-semibold text-sm shadow hover:from-yellow-600 hover:to-orange-600"
-                              onClick={() => handleOpenPlanModal(alert)}
-                            >
-                              Create Trade Plan
-                            </button>
-                          </div>
-                        </div>
+                      <div key={alert.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                        <AlertCard 
+                          alert={alert}
+                          onPlan={handleOpenPlanModal}
+                          hasPlan={plannedStockKeys.has(alert.instrument_key)}
+                          livePrice={livePrices[alert.instrument_key]}
+                        />
+                        {wasPremarketPick && (
+                          <span className="inline-block mt-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-semibold shadow">Premarket Pick</span>
+                        )}
                       </div>
                     );
                   })}
@@ -794,6 +626,96 @@ const AlertsPage = ({ setCurrentPage }) => {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Screening Results Tab */}
+          {alertCategory === 'SCREENING' && !loading && !error && (
+            <div>
+              {/* Stats and filter */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <div className="flex gap-4 text-lg font-semibold text-white">
+                  <span>Screened: <span className="text-blue-400">{screeningStats.total}</span></span>
+                  <span>Entry Triggered: <span className="text-purple-400">{screeningStats.triggered}</span></span>
+                  <span>Waiting: <span className="text-green-400">{screeningStats.waiting}</span></span>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setScreenerFilter('ALL')} className={`px-3 py-1 rounded ${screenerFilter==='ALL' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}>All</button>
+                  <button onClick={() => setScreenerFilter('WAITING')} className={`px-3 py-1 rounded ${screenerFilter==='WAITING' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Waiting</button>
+                  <button onClick={() => setScreenerFilter('TRIGGERED')} className={`px-3 py-1 rounded ${screenerFilter==='TRIGGERED' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'}`}>Triggered</button>
+                </div>
+              </div>
+              {/* Render cards from screenerStocks, filtered by screenerFilter */}
+              {screenerStocks.filter(stock => {
+                if (screenerFilter === 'ALL') return true;
+                if (screenerFilter === 'WAITING') return stock.entry_status !== 'triggered';
+                if (screenerFilter === 'TRIGGERED') return stock.entry_status === 'triggered';
+                return true;
+              }).length > 0 ? (
+                <div className="space-y-6">
+                  {screenerStocks.filter(stock => {
+                    if (screenerFilter === 'ALL') return true;
+                    if (screenerFilter === 'WAITING') return stock.entry_status !== 'triggered';
+                    if (screenerFilter === 'TRIGGERED') return stock.entry_status === 'triggered';
+                    return true;
+                  }).map((stock, index) => (
+                    <div key={stock.id} className="animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <div className="glass p-6 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-2xl font-bold text-white">{stock.tradingsymbol}</span>
+                            <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 font-mono">{stock.instrument_key}</span>
+                          </div>
+                          <div className="text-sm text-gray-400 mb-1">Strategy: <span className="font-semibold text-green-400">{stock.source_strategy.replace('_', ' ')}</span></div>
+                          <div className="text-sm text-gray-400 mb-1">Score: <span className="font-semibold text-blue-400">{stock.alert_details?.score ?? '-'}</span></div>
+                          <div className="text-sm text-gray-400 mb-1">Reasons:
+                            <ul className="list-disc ml-6">
+                              {(stock.alert_details?.reasons || []).map((reason, i) => (
+                                <li key={i}>{reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {/* Status badge */}
+                          {stock.entry_status === 'triggered' ? (
+                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-sm mb-1">Entry Triggered</span>
+                          ) : (
+                            <span className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-sm mb-1">Waiting</span>
+                          )}
+                          {/* View Entry Alert button */}
+                          {stock.entry_status === 'triggered' && stock.entry_alert && (
+                            <button
+                              onClick={() => handleViewEntryAlert(stock.instrument_key)}
+                              className="px-3 py-1 rounded bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 transition"
+                              title="View Entry Alert"
+                            >
+                              View Entry Alert
+                            </button>
+                          )}
+                          {/* Plan button */}
+                          <button
+                            className="mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-semibold text-sm shadow hover:from-yellow-600 hover:to-orange-600"
+                            onClick={() => handleOpenPlanModal(stock)}
+                          >
+                            Create Trade Plan
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <div className="glass p-8 rounded-xl border border-gray-600 max-w-md mx-auto">
+                    <svg className="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <p className="text-gray-400 font-semibold mb-2">No screening results found</p>
+                    <p className="text-gray-500 text-sm">Screening results are generated at market open (9:00 AM IST).</p>
+                  </div>
                 </div>
               )}
             </div>

@@ -78,6 +78,11 @@ class RadarAlert(models.Model):
     alert_type = models.CharField(max_length=20, choices=ALERT_TYPE_CHOICES, default='SCREENING')
     notified = models.BooleanField(default=False)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['instrument_key', 'source_strategy'], name='unique_instrument_strategy')
+        ]
+
     def __str__(self):
         return f"{self.instrument_key} - {self.source_strategy} - {self.status}"
 

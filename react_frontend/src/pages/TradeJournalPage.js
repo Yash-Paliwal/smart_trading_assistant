@@ -242,11 +242,11 @@ const TradeJournalPage = () => {
       </main>
       {/* Render the close trade modal conditionally */}
       {isCloseModalOpen && (
-        <CloseTradeModal 
-          tradeLog={selectedTrade}
-          onClose={handleCloseCloseModal}
-          onConfirm={handleConfirmCloseTrade}
-        />
+          <CloseTradeModal 
+            tradeLog={selectedTrade}
+            onClose={handleCloseCloseModal}
+            onConfirm={handleConfirmCloseTrade}
+          />
       )}
     </div>
   );

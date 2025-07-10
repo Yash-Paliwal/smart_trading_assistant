@@ -99,5 +99,5 @@ export const getVirtualTradingDashboard = async () => {
  * Fetches the full premarket screener list for today, with entry alert status for each stock.
  */
 export const getScreenerStatus = () => {
-  return apiClient.get(`/screener-status/`);
+  return apiClient.get(`/api/screener-status/`);
 };

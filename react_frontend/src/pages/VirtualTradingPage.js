@@ -206,27 +206,27 @@ const VirtualTradingPage = () => {
                 </svg>
                 <p className="text-gray-400 font-semibold mb-2">No open positions</p>
                 <p className="text-gray-500 text-sm">Your open trades will appear here in real time.</p>
-              </div>
-            ) : (
+                </div>
+              ) : (
               <div className="space-y-6">
                 {open_positions.map((trade, idx) => (
                   <div key={trade.id} className="glass p-4 rounded-lg border border-blue-500 shadow animate-slide-in" style={{ animationDelay: `${idx * 0.05}s` }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xl font-bold text-white">{trade.tradingsymbol}</span>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-md ${trade.pnl >= 0 ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' : 'bg-gradient-to-r from-red-500 to-pink-500 text-white'}`}>{trade.pnl >= 0 ? 'Profit' : 'Loss'}</span>
-                    </div>
+                        </div>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-2">
                       <span>Entry: <span className="font-semibold text-green-400">₹{trade.entry_price}</span></span>
                       <span>Qty: <span className="font-semibold text-blue-400">{trade.quantity}</span></span>
                       <span>Type: <span className="font-semibold text-yellow-400">{trade.trade_type}</span></span>
                       <span>Current: <span className="font-semibold text-white">₹{trade.current_price}</span></span>
                       <span>P&L: <span className={trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>₹{trade.pnl}</span></span>
-                    </div>
+                        </div>
                     <div className="text-xs text-gray-400">Opened at: {new Date(trade.trade_date).toLocaleString()}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              )}
           </div>
 
           {/* Recent Trades */}
@@ -239,27 +239,27 @@ const VirtualTradingPage = () => {
                 </svg>
                 <p className="text-gray-400 font-semibold mb-2">No recent trades</p>
                 <p className="text-gray-500 text-sm">Your closed trades will appear here.</p>
-              </div>
-            ) : (
+                </div>
+              ) : (
               <div className="space-y-6">
                 {recent_trades.map((trade, idx) => (
                   <div key={trade.id} className="glass p-4 rounded-lg border border-gray-500 shadow animate-slide-in opacity-80" style={{ animationDelay: `${idx * 0.05}s` }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xl font-bold text-white">{trade.tradingsymbol}</span>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-md ${trade.pnl >= 0 ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' : 'bg-gradient-to-r from-red-500 to-pink-500 text-white'}`}>{trade.pnl >= 0 ? 'Profit' : 'Loss'}</span>
-                    </div>
+                        </div>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-2">
                       <span>Entry: <span className="font-semibold text-green-400">₹{trade.entry_price}</span></span>
                       <span>Exit: <span className="font-semibold text-red-400">₹{trade.exit_price}</span></span>
                       <span>Qty: <span className="font-semibold text-blue-400">{trade.quantity}</span></span>
                       <span>Type: <span className="font-semibold text-yellow-400">{trade.trade_type}</span></span>
                       <span>P&L: <span className={trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>₹{trade.pnl}</span></span>
-                    </div>
+                        </div>
                     <div className="text-xs text-gray-400">Closed at: {new Date(trade.exit_date).toLocaleString()}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              )}
           </div>
         </div>
 
@@ -268,15 +268,15 @@ const VirtualTradingPage = () => {
           <div className="mt-8 glass p-8 rounded-xl border border-gray-700 shadow-md animate-slide-in">
             <h2 className="text-2xl font-bold text-white mb-6">Trading Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
+                <div className="text-center">
                 <p className="text-sm text-gray-400">Profitable Trades</p>
                 <p className="text-2xl font-bold text-green-400">{Number(statistics.profitable_trades || 0)}</p>
-              </div>
-              <div className="text-center">
+                </div>
+                <div className="text-center">
                 <p className="text-sm text-gray-400">Average Profit</p>
                 <p className="text-2xl font-bold text-green-400">{formatCurrency(statistics.avg_profit)}</p>
-              </div>
-              <div className="text-center">
+                </div>
+                <div className="text-center">
                 <p className="text-sm text-gray-400">Average Loss</p>
                 <p className="text-2xl font-bold text-red-400">{formatCurrency(statistics.avg_loss)}</p>
               </div>

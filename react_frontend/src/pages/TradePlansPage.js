@@ -80,12 +80,12 @@ const TradePlansPage = () => {
   };
 
   const handleDeletePlan = async (tradeId) => {
-    try {
-      await deleteTradeLog(tradeId);
-      setTradeLogs(prevLogs => prevLogs.filter(log => log.id !== tradeId));
+      try {
+        await deleteTradeLog(tradeId);
+        setTradeLogs(prevLogs => prevLogs.filter(log => log.id !== tradeId));
       toast('Trade plan deleted.', 'info');
-    } catch (err) {
-      console.error("Failed to delete trade plan:", err);
+      } catch (err) {
+        console.error("Failed to delete trade plan:", err);
       toast('Failed to delete trade plan. Please try again.', 'error');
     }
   };
@@ -181,9 +181,9 @@ const TradePlansPage = () => {
       {/* Render the new activation modal conditionally */}
       {isActivateModalOpen && (
         <ActivateTradeModal 
-          tradePlan={selectedPlan}
-          onClose={handleCloseActivateModal}
-          onActivate={handleActivateTrade}
+            tradePlan={selectedPlan}
+            onClose={handleCloseActivateModal}
+            onActivate={handleActivateTrade}
         />
       )}
     </div>

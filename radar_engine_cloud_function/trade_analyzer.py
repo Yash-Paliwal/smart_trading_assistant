@@ -4,6 +4,7 @@ import psycopg2
 from decouple import config
 import json
 import pandas as pd
+import traceback
 
 # --- Database Configuration ---
 DB_HOST = config('DB_HOST')
@@ -206,27 +207,49 @@ def save_alerts_to_db(alerts_to_save, strategy_name):
         # This SQL command will INSERT a new alert. If an alert for the same
         # instrument_key and source_strategy already exists, it will UPDATE it.
         sql = """
-            INSERT INTO trading_app_radaralert (instrument_key, source_strategy, alert_details, indicators, timestamp)
-            VALUES (%s, %s, %s, %s, NOW())
+            INSERT INTO trading_app_radaralert (
+                instrument_key, source_strategy, alert_details, indicators, timestamp,
+                status, priority, alert_type, notified, expires_at
+            )
+            VALUES (%s, %s, %s, %s, NOW(), %s, %s, %s, %s, %s)
             ON CONFLICT (instrument_key, source_strategy) DO UPDATE SET
                 alert_details = EXCLUDED.alert_details,
                 indicators = EXCLUDED.indicators,
-                timestamp = NOW();
+                timestamp = NOW(),
+                status = EXCLUDED.status,
+                priority = EXCLUDED.priority,
+                alert_type = EXCLUDED.alert_type,
+                notified = EXCLUDED.notified,
+                expires_at = EXCLUDED.expires_at;
         """
         
         for alert in alerts_to_save:
             alert_details_with_score = {"score": alert['score'], "reasons": alert['reasons']}
             alert_details_json = json.dumps(alert_details_with_score)
             indicators_json = json.dumps(alert['indicators'], default=str, indent=2)
-            
-            values = (alert['instrument_key'], strategy_name, alert_details_json, indicators_json)
+
+            # Set defaults for required fields if not present
+            status = alert.get('status', 'ACTIVE')
+            priority = alert.get('priority', 'MEDIUM')
+            alert_type = alert.get('alert_type', 'SCREENING')
+            notified = alert.get('notified', False)
+            expires_at = alert.get('expires_at', None)
+            # psycopg2 will convert None to NULL for expires_at
+
+            values = (
+                alert['instrument_key'], strategy_name, alert_details_json, indicators_json,
+                status, priority, alert_type, notified, expires_at
+            )
             cur.execute(sql, values)
 
         conn.commit()
         print(f"SUCCESS: Saved/Updated {len(alerts_to_save)} alerts for strategy '{strategy_name}' in the database.")
+        print("[DEBUG] Database commit successful.")
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
         print(f"ERROR saving alerts to database: {error}")
+        traceback.print_exc()
     finally:
         if conn is not None:
             conn.close()
+            print("[DEBUG] Database connection closed.")
